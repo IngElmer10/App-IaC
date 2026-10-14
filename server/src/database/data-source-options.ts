@@ -1,0 +1,45 @@
+import type { DataSourceOptions } from 'typeorm';
+import { AcademicModuleOrmEntity } from '../modules/academic-modules/infrastructure/persistence/academic-module.orm-entity';
+import { ActivityLogOrmEntity } from '../modules/activity/infrastructure/persistence/activity-log.orm-entity';
+import { AdminOrmEntity } from '../modules/admins/infrastructure/persistence/admin.orm-entity';
+import { AttendanceChangeOrmEntity } from '../modules/attendance/infrastructure/persistence/attendance-change.orm-entity';
+import { AttendanceOrmEntity } from '../modules/attendance/infrastructure/persistence/attendance.orm-entity';
+import { ClassSessionOrmEntity } from '../modules/class-sessions/infrastructure/persistence/class-session.orm-entity';
+import { StudentOrmEntity } from '../modules/students/infrastructure/persistence/student.orm-entity';
+import { InitialSchema1760400000000 } from './migrations/1760400000000-initial-schema';
+import { AttendanceRulesAndProfile1760500000000 } from './migrations/1760500000000-attendance-rules-and-profile';
+import { AttendanceScoring1760600000000 } from './migrations/1760600000000-attendance-scoring';
+import { ModuleScheduling1760700000000 } from './migrations/1760700000000-module-scheduling';
+import { StudentEditingExtraFields1760800000000 } from './migrations/1760800000000-student-editing-extra-fields';
+
+export const ORM_ENTITIES = [
+  AdminOrmEntity,
+  AcademicModuleOrmEntity,
+  StudentOrmEntity,
+  ClassSessionOrmEntity,
+  AttendanceOrmEntity,
+  AttendanceChangeOrmEntity,
+  ActivityLogOrmEntity,
+];
+
+export function buildDataSourceOptions(
+  env: (key: string) => string | undefined,
+): DataSourceOptions {
+  return {
+    type: 'postgres',
+    host: env('DB_HOST') ?? 'localhost',
+    port: Number(env('DB_PORT') ?? 5432),
+    username: env('DB_USER') ?? 'postgres',
+    password: env('DB_PASSWORD'),
+    database: env('DB_NAME') ?? 'modulo2',
+    entities: ORM_ENTITIES,
+    migrations: [
+      InitialSchema1760400000000,
+      AttendanceRulesAndProfile1760500000000,
+      AttendanceScoring1760600000000,
+      ModuleScheduling1760700000000,
+      StudentEditingExtraFields1760800000000,
+    ],
+    synchronize: false,
+  };
+}
