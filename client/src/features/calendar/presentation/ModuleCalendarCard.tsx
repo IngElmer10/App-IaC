@@ -91,10 +91,15 @@ export function ModuleCalendarCard({
 }) {
   const today = todayIso()
   const byDate = new Map(sessions.map((s) => [s.classDate, s]))
-  const first = sessions[0].classDate
-  const last = sessions[sessions.length - 1].classDate
-  const schedule = scheduleOf(sessions)
-  const done = sessions.filter((s) => s.classDate < today).length
+  // Las canceladas se ven en el calendario, pero no cuentan para periodo, horario ni totales.
+  const active = sessions.filter((s) => s.status !== 'CANCELLED')
+  const counted = active.length ? active : sessions
+  const first = counted[0].classDate
+  const last = counted[counted.length - 1].classDate
+  const schedule = scheduleOf(counted)
+  const done = active.filter((s) => s.classDate < today).length
+  const hasCancelled = active.length < sessions.length
+  const hasMakeup = sessions.some((s) => s.isMakeup)
   const months = monthsBetween(first, last)
   const [offset, setOffset] = useState(0)
   const maxOffset = Math.max(0, months.length - VISIBLE_MONTHS)
@@ -170,9 +175,10 @@ export function ModuleCalendarCard({
                 label="Total de clases"
                 value={
                   <>
-                    {sessions.length} clases
+                    {active.length} clases
                     <span className="block font-normal text-muted">
-                      {done} realizadas · {sessions.length - done} por venir
+                      {done} realizadas · {active.length - done} por venir
+                      {hasCancelled && ` · ${sessions.length - active.length} canceladas`}
                     </span>
                   </>
                 }
@@ -187,6 +193,8 @@ export function ModuleCalendarCard({
               <Legend swatch={<span className="size-5 rounded-md bg-surface ring-1 ring-line" />} label="Sin clase" />
               <Legend swatch={<span className="mx-1.5 size-2 rounded-full bg-teal-ink" />} label="Clase realizada" />
               <Legend swatch={<span className="mx-1.5 size-2 rounded-full bg-white ring-1 ring-line" />} label="Clase por venir" />
+              {hasCancelled && <Legend swatch={<span className="size-5 rounded-md bg-alert-soft ring-1 ring-alert/40" />} label="Cancelada" />}
+              {hasMakeup && <Legend swatch={<span className="size-5 rounded-md bg-teal ring-2 ring-info ring-offset-1 ring-offset-surface" />} label="Recuperación" />}
             </div>
           </Panel>
 
@@ -267,16 +275,26 @@ function MonthCalendar({
           </span>
         ))}
         {cells.map((cell) => {
-          const session = cell.inMonth ? byDate.get(cell.iso) : undefined
+          const found = cell.inMonth ? byDate.get(cell.iso) : undefined
+          const cancelled = found?.status === 'CANCELLED'
+          const session = cancelled ? undefined : found
           const isToday = cell.inMonth && cell.iso === today
           return (
             <span
               key={cell.iso}
-              title={session ? `Clase de ${session.startTime} a ${session.endTime}` : undefined}
+              title={
+                cancelled
+                  ? 'Clase cancelada'
+                  : session
+                    ? `${session.isMakeup ? 'Clase de recuperación' : 'Clase'} de ${session.startTime} a ${session.endTime}`
+                    : undefined
+              }
               className={cn(
                 'relative grid aspect-square place-items-center rounded-xl font-semibold tabular-nums',
                 !cell.inMonth && 'bg-canvas/60 text-muted/50',
-                cell.inMonth && !session && 'bg-canvas text-ink/80',
+                cell.inMonth && !session && !cancelled && 'bg-canvas text-ink/80',
+                cancelled && 'bg-alert-soft text-alert-ink line-through ring-1 ring-alert/40',
+                session?.isMakeup && 'ring-2 ring-info ring-offset-2 ring-offset-surface',
                 session && 'bg-linear-to-b from-teal to-[#0c7d75] text-white shadow-sm shadow-teal/30',
                 isToday && (session ? 'ring-2 ring-brand ring-offset-2 ring-offset-surface' : 'bg-brand-soft text-brand-ink ring-2 ring-brand'),
               )}

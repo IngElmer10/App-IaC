@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AttendanceRules, ensureValidRules } from '../../../shared/domain/attendance-rules';
 import type { AuthUser } from '../../../shared/domain/auth-user';
 import { ActivityRecorder } from '../../activity/application/activity-recorder.service';
+import { Notifier } from '../../notifications/application/notifier.service';
 import { AcademicModuleRepository } from '../domain/academic-module.repository';
 import { ActiveModuleService } from './active-module.service';
 
@@ -12,6 +13,7 @@ export class UpdateAttendanceRulesUseCase {
     private readonly activeModule: ActiveModuleService,
     private readonly repository: AcademicModuleRepository,
     private readonly activity: ActivityRecorder,
+    private readonly notifier: Notifier,
   ) {}
 
   async execute(admin: AuthUser, rules: AttendanceRules) {
@@ -29,10 +31,21 @@ export class UpdateAttendanceRulesUseCase {
         rules.enabled
           ? `Puntualidad activada (abre ${rules.openBeforeMinutes} min antes, tolerancia ${rules.toleranceMinutes} min, atraso hasta ${rules.lateLimitMinutes} min)`
           : 'Puntualidad desactivada (se marca todo el día)'
-      } · Presente ${rules.presentPoints} pts, Atraso ${rules.latePoints} pts, mínimo ${rules.minAttendancePercentage}%`,
+      } · Presente ${rules.presentPoints} pts, Atraso ${rules.latePoints} pts, mínimo ${rules.minAttendancePercentage}% · ${
+        rules.justificationDays ? `justificaciones hasta ${rules.justificationDays} días después` : 'sin justificaciones de estudiantes'
+      }${rules.requireClassCode ? ' · exige código de clase' : ''}`,
       details: { previous: module.rules, next: rules },
     });
 
+    if (rules.requireClassCode && !module.rules.requireClassCode) {
+      await this.notifier.toStudents({
+        moduleId: module.id,
+        type: 'CLASS_CODE_ENABLED',
+        title: 'Ahora necesitas un código para marcar asistencia',
+        body: 'Tu docente activó el código de clase: en cada clase te dará un código (por el chat o en pantalla) que debes escribir al marcar.',
+        link: '/estudiante',
+      });
+    }
     return this.repository.summarize(updated);
   }
 }

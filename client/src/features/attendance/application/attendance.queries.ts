@@ -12,8 +12,8 @@ export const attendanceKeys = {
 /** RF-05 */
 export function useMyAttendance() {
   const { attendance } = useDependencies()
-  // Se refresca cada minuto para que el botón se habilite o cierre según el horario de la clase.
-  return useQuery({ queryKey: attendanceKeys.mine, queryFn: () => attendance.getMine(), refetchInterval: 60_000 })
+  // Se refresca cada 30 s para que el botón se habilite o cierre según el horario de la clase.
+  return useQuery({ queryKey: attendanceKeys.mine, queryFn: () => attendance.getMine(), refetchInterval: 30_000 })
 }
 
 /** Detalle de un estudiante para el administrador. */
@@ -31,7 +31,7 @@ export function useMarkAttendance() {
   const { attendance } = useDependencies()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () => attendance.mark(),
+    mutationFn: (code?: string) => attendance.mark(code),
     onSettled: () => queryClient.invalidateQueries({ queryKey: attendanceKeys.mine }),
   })
 }
@@ -77,6 +77,23 @@ export function useExportAttendance(moduleId?: number) {
       link.download = fileName
       link.click()
       URL.revokeObjectURL(url)
+      return fileName
+    },
+  })
+}
+
+/** Descarga la constancia de asistencia en PDF (del estudiante indicado o la propia). */
+export function useDownloadCertificate() {
+  const { attendance } = useDependencies()
+  return useMutation({
+    mutationFn: async ({ studentId, moduleId }: { studentId?: number; moduleId?: number } = {}) => {
+      const { blob, fileName } = await attendance.certificate(studentId, moduleId)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
       return fileName
     },
   })

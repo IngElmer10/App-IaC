@@ -30,6 +30,12 @@ const ACTION_TONES: Record<ActivityAction, ChipTone> = {
   SUBMIT_JUSTIFICATION: 'info',
   APPROVE_JUSTIFICATION: 'teal',
   REJECT_JUSTIFICATION: 'alert',
+  CHANGE_PASSWORD: 'neutral',
+  CANCEL_SESSION: 'alert',
+  RESTORE_SESSION: 'teal',
+  RESCHEDULE_SESSION: 'warning',
+  ADD_SESSION: 'info',
+  SET_CLASS_CODE: 'neutral',
 }
 
 const PAGE_SIZE = 20

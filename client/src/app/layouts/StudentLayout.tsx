@@ -1,6 +1,7 @@
 import { BookOpen, CalendarCheck2, House, LogOut, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../../features/auth/application/auth-context'
+import { NotificationBell } from '../../features/notifications/presentation/NotificationBell'
 import { cn } from '../../shared/lib/cn'
 import { AppBackground } from '../../shared/ui/AppBackground'
 import { ThemeToggle } from '../../shared/ui/ThemeToggle'
@@ -34,6 +35,7 @@ export function StudentLayout() {
           <div className="flex items-center gap-2 sm:gap-3">
             <span className="hidden text-sm font-medium text-muted sm:block">{user?.name}</span>
             <ThemeToggle className="size-10" />
+            <NotificationBell className="size-10" />
             <Button variant="ghost" size="sm" icon={<LogOut className="size-4" />} onClick={() => void logout()}>
               Salir
             </Button>

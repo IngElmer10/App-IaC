@@ -48,11 +48,12 @@ function observation(record: AttendanceRecord) {
     return record.adminNote ? `Administrador: ${record.adminNote}` : 'Registrado por el administrador'
   }
   if (record.status === 'FALTA') return 'Sin marca'
+  if (record.status === 'CANCELADA') return 'Clase cancelada'
   return ''
 }
 
 const score = (record: AttendanceRecord) =>
-  record.status === 'JUSTIFICADO' ? '—' : `${record.points ?? '?'} / ${record.maxPoints}`
+  record.status === 'JUSTIFICADO' || record.status === 'CANCELADA' ? '—' : `${record.points ?? '?'} / ${record.maxPoints}`
 
 /**
  * Historial al estilo del aula virtual: filtros por periodo, puntuación por sesión
@@ -82,6 +83,8 @@ export function AttendanceHistoryTable({
     return true
   })
 
+  // Las clases canceladas no forman parte del total.
+  const countable = visible.filter((r) => r.status !== 'CANCELADA')
   const completed = visible.filter((r) => r.points !== null || r.status === 'JUSTIFICADO')
   const scored = visible.filter((r) => r.points !== null)
   const points = scored.reduce((sum, r) => sum + (r.points ?? 0), 0)
@@ -201,7 +204,7 @@ export function AttendanceHistoryTable({
         <div>
           <dt className="text-muted">Sesiones registradas</dt>
           <dd className="font-bold">
-            {completed.length} de {visible.length}
+            {completed.length} de {countable.length}
           </dd>
         </div>
         <div>

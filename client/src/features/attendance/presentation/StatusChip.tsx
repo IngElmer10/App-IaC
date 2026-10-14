@@ -1,4 +1,4 @@
-import { AlarmClock, CalendarClock, Check, Clock3, FileCheck2, X } from 'lucide-react'
+import { AlarmClock, Ban, CalendarClock, Check, Clock3, FileCheck2, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Chip, type ChipTone } from '../../../shared/ui/Chip'
 import { STATUS_LABELS, type AttendanceStatus } from '../domain/attendance'
@@ -11,6 +11,7 @@ const META: Record<AttendanceStatus, { tone: ChipTone; icon: ReactNode }> = {
   JUSTIFICADO: { tone: 'info', icon: <FileCheck2 className="size-3.5" /> },
   PENDIENTE: { tone: 'teal', icon: <Clock3 className="size-3.5" /> },
   PROGRAMADA: { tone: 'outline', icon: <CalendarClock className="size-3.5" /> },
+  CANCELADA: { tone: 'neutral', icon: <Ban className="size-3.5" /> },
 }
 
 export function StatusChip({ status, compact = false }: { status: AttendanceStatus; compact?: boolean }) {

@@ -39,7 +39,7 @@ export function useJustifications(filters: JustificationFilters, enabled = true)
   return useQuery({
     queryKey: keys.list(filters),
     queryFn: () => justifications.list(filters),
-    refetchInterval: 60_000,
+    refetchInterval: 30_000,
     enabled,
   })
 }
@@ -80,5 +80,7 @@ export function useJustificationImage(id: number, fileId: number) {
       })
     },
     staleTime: Infinity,
+    // Las imágenes no cambian: no se vuelven a descargar periódicamente.
+    refetchInterval: false,
   })
 }

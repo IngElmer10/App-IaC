@@ -10,6 +10,8 @@ import { calendarSummaryText } from '../../calendar/domain/calendar'
 import { CalendarShareActions, ModuleCalendarCard } from '../../calendar/presentation/ModuleCalendarCard'
 import { useTeacher, useTeacherPhotoUrl } from '../../profile/application/profile.queries'
 import { teacherDisplayName } from '../../profile/domain/profile'
+import { useSessionChanges } from '../../class-sessions/application/sessions.queries'
+import { SessionChangesHistory } from '../../class-sessions/presentation/SessionChangesHistory'
 import { AttendanceRulesInfo } from './AttendanceRulesInfo'
 import { TeacherCard } from './TeacherCard'
 
@@ -17,6 +19,7 @@ import { TeacherCard } from './TeacherCard'
 export function StudentModulePage() {
   const { data, isLoading, error } = useMyAttendance()
   const teacher = useTeacher()
+  const changes = useSessionChanges()
   const teacherPhotoUrl = useTeacherPhotoUrl()
   const image = useCalendarImage(calendarFileName(data?.module.name ?? 'modulo'))
 
@@ -29,7 +32,13 @@ export function StudentModulePage() {
     )
   }
 
-  const sessions = data.records.map((r) => ({ classDate: r.date, startTime: r.startTime, endTime: r.endTime }))
+  const sessions = data.records.map((r) => ({
+    classDate: r.date,
+    startTime: r.startTime,
+    endTime: r.endTime,
+    status: r.status === 'CANCELADA' ? ('CANCELLED' as const) : ('SCHEDULED' as const),
+    isMakeup: changes.data?.some((c) => c.sessionId === r.sessionId && c.action === 'ADD') ?? false,
+  }))
   const teacherData = teacher.data ?? null
 
   return (
@@ -58,6 +67,10 @@ export function StudentModulePage() {
         teacherPhotoUrl={teacherPhotoUrl}
         cardRef={image.ref}
       />
+
+      <div className="print:hidden">
+        <SessionChangesHistory title="Cambios en las clases" moduleName={data.module.name} emptyHidden />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2 print:hidden">
         <TeacherCard teacher={teacherData} photoUrl={teacherPhotoUrl} />

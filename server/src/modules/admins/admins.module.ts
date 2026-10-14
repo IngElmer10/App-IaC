@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminProfileService } from './application/admin-profile.use-cases';
+import { ChangePasswordUseCase } from './application/change-password.use-case';
+import { ActivityModule } from '../activity/activity.module';
 import { EnsureDefaultAdminUseCase } from './application/ensure-default-admin.use-case';
 import { PasswordHasher } from './application/password-hasher.port';
 import { AdminRepository } from './domain/admin.repository';
@@ -13,7 +15,7 @@ import { TypeormAdminRepository } from './infrastructure/persistence/typeorm-adm
 import { BcryptPasswordHasher } from './infrastructure/security/bcrypt-password.hasher';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminOrmEntity]), AcademicModulesModule],
+  imports: [TypeOrmModule.forFeature([AdminOrmEntity]), AcademicModulesModule, ActivityModule],
   controllers: [ProfileController, TeacherController],
   providers: [
     { provide: AdminRepository, useClass: TypeormAdminRepository },
@@ -21,6 +23,7 @@ import { BcryptPasswordHasher } from './infrastructure/security/bcrypt-password.
     EnsureDefaultAdminUseCase,
     DefaultAdminSeeder,
     AdminProfileService,
+    ChangePasswordUseCase,
   ],
   exports: [AdminRepository, PasswordHasher],
 })

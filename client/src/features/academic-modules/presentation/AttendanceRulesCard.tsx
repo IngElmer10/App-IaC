@@ -6,6 +6,7 @@ import { Button } from '../../../shared/ui/Button'
 import { Card, CardHeader } from '../../../shared/ui/Card'
 import { Field, Input } from '../../../shared/ui/Field'
 import { useToast } from '../../../shared/ui/toast'
+import { ClassCodeCard } from '../../class-sessions/presentation/ClassCodeCard'
 import { useUpdateAttendanceRules } from '../application/academic-modules.queries'
 import type { AttendanceRules } from '../domain/academic-module'
 import { fromMinutes, markWindowFor } from '../domain/attendance-rules'
@@ -29,7 +30,7 @@ export function AttendanceRulesCard({
   const invalidPoints = draft.latePoints > draft.presentPoints || draft.presentPoints < 1
   const invalid = invalidTimes || invalidPoints
 
-  const setNumber = (key: Exclude<keyof AttendanceRules, 'enabled'>) => (value: string) =>
+  const setNumber = (key: Exclude<keyof AttendanceRules, 'enabled' | 'requireClassCode'>) => (value: string) =>
     setDraft((current) => ({ ...current, [key]: Math.max(0, Math.floor(Number(value) || 0)) }))
 
   const save = () =>
@@ -125,6 +126,61 @@ export function AttendanceRulesCard({
             </p>
           )}
         </div>
+
+        <div className="border-t border-line pt-5">
+          <h3 className="font-bold">Justificaciones</h3>
+          <p className="text-sm text-muted">
+            Hasta cuántos días después de la clase el estudiante puede justificar una falta o un atraso con pruebas.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <Field
+              label="Plazo para justificar"
+              htmlFor="justificationDays"
+              hint={draft.justificationDays === 0 ? 'Desactivado: solo tú registras justificaciones.' : 'Usa 0 para desactivarlas.'}
+            >
+              <NumberInput
+                id="justificationDays"
+                unit="días"
+                value={draft.justificationDays}
+                max={30}
+                onChange={setNumber('justificationDays')}
+              />
+            </Field>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-start justify-between gap-3 border-t border-line pt-5">
+          <div className="max-w-xl">
+            <h3 className="font-bold">Código de clase</h3>
+            <p className="text-sm text-muted">
+              Para que nadie marque por otro: en cada clase escribes un código (letras y/o números, por ejemplo AB12CD), lo
+              compartes en el chat de la clase y el estudiante debe escribirlo para marcar. Se siguen aplicando las reglas de
+              Presente, Atraso y Falta según la hora.
+            </p>
+          </div>
+          <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold">
+            {draft.requireClassCode ? 'Activado' : 'Desactivado'}
+            <input
+              type="checkbox"
+              role="switch"
+              checked={draft.requireClassCode}
+              onChange={(e) => setDraft((current) => ({ ...current, requireClassCode: e.target.checked }))}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden
+              className="relative h-6 w-11 rounded-full bg-line transition peer-checked:bg-brand peer-focus-visible:ring-4 peer-focus-visible:ring-brand/20 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5"
+            />
+          </label>
+        </div>
+        {draft.requireClassCode &&
+          (rules.requireClassCode ? (
+            <ClassCodeCard embedded />
+          ) : (
+            <p className="rounded-xl bg-info-soft px-4 py-3 text-sm text-info-ink">
+              Pulsa <strong>Guardar reglas</strong> y aquí mismo aparecerá el campo para escribir el código de la clase.
+            </p>
+          ))}
 
         <div className="flex justify-end">
           <Button icon={<Save className="size-4" />} onClick={save} loading={update.isPending} disabled={!changed || invalid}>

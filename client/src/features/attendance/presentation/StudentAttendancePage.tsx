@@ -12,6 +12,7 @@ import { useStudentAttendance } from '../application/attendance.queries'
 import { AttendanceHistoryTable } from './AttendanceHistoryTable'
 import { AttendanceStats, RiskBanner } from './AttendanceStats'
 import { EditAttendanceDialog, type EditTarget } from './EditAttendanceDialog'
+import { CertificateButton } from './CertificateButton'
 import { ReadOnlyBanner } from './ReadOnlyBanner'
 
 /** Detalle de asistencia de un estudiante para el administrador, con edición por sesión. */
@@ -52,6 +53,9 @@ export function StudentAttendancePage() {
           <ArrowLeft className="size-4" /> {moduleId ? data.module.name : 'Asistencias'}
         </Link>
         <div className="mt-3 flex flex-wrap items-center gap-4">
+          <div className="order-last ml-auto sm:order-none">
+            <CertificateButton studentId={student.id} moduleId={moduleId} />
+          </div>
           <div className="grid size-14 place-items-center rounded-2xl bg-brand-soft text-lg font-extrabold text-brand-ink">
             {student.fullName.charAt(0).toUpperCase()}
           </div>

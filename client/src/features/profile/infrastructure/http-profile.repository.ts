@@ -35,6 +35,10 @@ export class HttpProfileRepository implements ProfileRepository {
     return data
   }
 
+  async changePassword(currentPassword: string, newPassword: string) {
+    await http.put('/profile/password', { currentPassword, newPassword })
+  }
+
   async removePhoto() {
     const { data } = await http.delete<TeacherProfile>('/profile/photo')
     return data

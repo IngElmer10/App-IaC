@@ -31,6 +31,7 @@ export function JustificationsPage() {
   const tab = TABS.find((t) => t.param === params.get('estado')) ?? TABS[0]
   const { data, isLoading, error } = useJustifications({ status: tab.status })
   const pending = useJustifications({ status: 'PENDING' }).data?.pending ?? 0
+  const justificationDays = useActiveModule().data?.rules.justificationDays ?? 0
 
   return (
     <>
@@ -72,7 +73,11 @@ export function JustificationsPage() {
           <EmptyState
             icon={<Inbox className="size-6" />}
             title={tab.status === 'PENDING' ? 'No hay justificaciones por revisar' : `No hay justificaciones ${tab.label.toLowerCase()}`}
-            description="Los estudiantes pueden justificar una falta o un atraso desde su historial, hasta 3 días después de la clase."
+            description={
+              justificationDays > 0
+                ? `Los estudiantes pueden justificar una falta o un atraso desde su historial, hasta ${justificationDays} ${justificationDays === 1 ? 'día' : 'días'} después de la clase. El plazo se cambia en Calendario > Reglas de asistencia.`
+                : 'Las justificaciones de estudiantes están desactivadas en este módulo; puedes adjuntar pruebas al modificar una asistencia.'
+            }
           />
         </Card>
       ) : (

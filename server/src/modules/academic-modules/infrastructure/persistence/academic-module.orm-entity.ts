@@ -51,4 +51,10 @@ export class AcademicModuleOrmEntity {
 
   @Column({ name: 'min_attendance_percentage', type: 'int', default: 80 })
   minAttendancePercentage: number;
+
+  @Column({ name: 'justification_days', type: 'int', default: 3 })
+  justificationDays: number;
+
+  @Column({ name: 'require_class_code', type: 'boolean', default: false })
+  requireClassCode: boolean;
 }

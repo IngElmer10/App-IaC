@@ -40,3 +40,11 @@ export class AttendanceOverviewQueryDto {
   @IsString()
   search?: string;
 }
+
+export class MarkAttendanceDto {
+  /** Código de la clase, solo si el módulo lo exige. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  code?: string;
+}

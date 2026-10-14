@@ -3,6 +3,7 @@ import type { Attendance } from './attendance';
 import { DEFAULT_ATTENDANCE_RULES } from '../../../shared/domain/attendance-rules';
 import {
   ensureAdminChangeIsEffective,
+  ensureClassCode,
   ensureStatusAllowed,
   ensureStudentCanMark,
   statusForStudentMark,
@@ -177,5 +178,27 @@ describe('markCountdown', () => {
       onTimeEndsInSeconds: null,
       closesInSeconds: 3600,
     });
+  });
+});
+
+describe('ensureClassCode', () => {
+  it('no exige nada si el módulo no usa código', () => {
+    expect(() => ensureClassCode(false, null, undefined)).not.toThrow();
+  });
+  it('compara sin distinguir mayúsculas ni espacios', () => {
+    expect(() => ensureClassCode(true, '1234AB', ' 1234ab ')).not.toThrow();
+    expect(() => ensureClassCode(true, '1234AB', '9999')).toThrow(BusinessRuleError);
+  });
+  it('avisa si el docente no publicó el código o si no se escribió', () => {
+    expect(() => ensureClassCode(true, null, '1234')).toThrow(BusinessRuleError);
+    expect(() => ensureClassCode(true, '1234', '')).toThrow(BusinessRuleError);
+  });
+});
+
+describe('clases canceladas', () => {
+  it('no cuentan en el resumen', () => {
+    const summary = summarize(['PRESENTE', 'CANCELADA', 'FALTA']);
+    expect(summary.total).toBe(2);
+    expect(summary.percentage).toBe(50);
   });
 });

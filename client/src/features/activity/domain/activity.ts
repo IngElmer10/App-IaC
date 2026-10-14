@@ -18,6 +18,12 @@ export type ActivityAction =
   | 'SUBMIT_JUSTIFICATION'
   | 'APPROVE_JUSTIFICATION'
   | 'REJECT_JUSTIFICATION'
+  | 'CHANGE_PASSWORD'
+  | 'CANCEL_SESSION'
+  | 'RESTORE_SESSION'
+  | 'RESCHEDULE_SESSION'
+  | 'ADD_SESSION'
+  | 'SET_CLASS_CODE'
 
 export interface ActivityLog {
   id: number
@@ -64,6 +70,12 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   SUBMIT_JUSTIFICATION: 'Envió justificación',
   APPROVE_JUSTIFICATION: 'Aprobó justificación',
   REJECT_JUSTIFICATION: 'Rechazó justificación',
+  CHANGE_PASSWORD: 'Cambió contraseña',
+  CANCEL_SESSION: 'Canceló clase',
+  RESTORE_SESSION: 'Restauró clase',
+  RESCHEDULE_SESSION: 'Reprogramó clase',
+  ADD_SESSION: 'Agregó clase de recuperación',
+  SET_CLASS_CODE: 'Código de clase',
 }
 
 /** Nombre de la acción; si el servidor agrega una nueva antes que la interfaz, se muestra igual. */

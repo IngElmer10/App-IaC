@@ -47,8 +47,10 @@ export function AttendanceRulesInfo({
             </Rule>
           </>
         )}
-        <Rule icon={<FileCheck2 className="size-4" />} tone="bg-info-soft text-info-ink" title="Corrección del docente">
-          Solo el docente puede corregir una asistencia o justificar una falta.
+        <Rule icon={<FileCheck2 className="size-4" />} tone="bg-info-soft text-info-ink" title="Justificaciones">
+          {rules.justificationDays > 0
+            ? `Si faltaste o llegaste tarde por un motivo válido, puedes justificarlo con imágenes desde tu historial hasta ${rules.justificationDays} ${rules.justificationDays === 1 ? 'día' : 'días'} después de la clase. El docente decide si cambia tu asistencia.`
+            : 'Solo el docente puede corregir una asistencia o justificar una falta.'}
         </Rule>
         <Rule icon={<Target className="size-4" />} tone="bg-accent-soft text-accent-ink" title={`Asistencia mínima: ${rules.minAttendancePercentage}%`}>
           Por debajo de ese porcentaje quedas en riesgo.

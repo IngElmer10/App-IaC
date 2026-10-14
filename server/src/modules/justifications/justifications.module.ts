@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicModulesModule } from '../academic-modules/academic-modules.module';
 import { ActivityModule } from '../activity/activity.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { ClassSessionsModule } from '../class-sessions/class-sessions.module';
 import { StudentsModule } from '../students/students.module';
@@ -23,6 +24,7 @@ import { TypeormJustificationRepository } from './infrastructure/persistence/typ
     StudentsModule,
     ClassSessionsModule,
     ActivityModule,
+    NotificationsModule,
   ],
   controllers: [JustificationsController],
   providers: [{ provide: JustificationRepository, useClass: TypeormJustificationRepository }, JustificationsService],

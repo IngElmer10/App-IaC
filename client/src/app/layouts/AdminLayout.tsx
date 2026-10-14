@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   CalendarCheck2,
   CalendarDays,
   ChevronRight,
@@ -43,6 +44,7 @@ const NAV = [
   { to: '/admin', label: 'Resumen', icon: LayoutDashboard, end: true },
   { to: '/admin/asistencias', label: 'Asistencias', icon: ClipboardList },
   { to: '/admin/calendario', label: 'Calendario', icon: CalendarDays },
+  { to: '/admin/reportes', label: 'Reportes', icon: BarChart3 },
   { to: '/admin/estudiantes', label: 'Estudiantes', icon: Users },
   { to: '/admin/justificaciones', label: 'Justificaciones', icon: FileClock },
   { to: '/admin/actividades', label: 'Actividades', icon: History },

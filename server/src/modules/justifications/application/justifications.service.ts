@@ -5,6 +5,7 @@ import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from 
 import { toDisplayDate } from '../../../shared/domain/display-date';
 import { ActiveModuleService } from '../../academic-modules/application/active-module.service';
 import { ActivityRecorder } from '../../activity/application/activity-recorder.service';
+import { Notifier } from '../../notifications/application/notifier.service';
 import { buildRecord, recordContextFor } from '../../attendance/application/attendance-record.view';
 import { StudentContextService } from '../../attendance/application/student-context.service';
 import { StudentHistoryService } from '../../attendance/application/student-history.service';
@@ -36,6 +37,7 @@ export class JustificationsService {
     private readonly sessions: ClassSessionRepository,
     private readonly attendances: AttendanceRepository,
     private readonly activity: ActivityRecorder,
+    private readonly notifier: Notifier,
     private readonly clock: Clock,
   ) {}
 
@@ -51,6 +53,7 @@ export class JustificationsService {
       classDate: record.date,
       today: view.today,
       existing: await this.justifications.findForSession(student.id, input.sessionId),
+      windowDays: module.rules.justificationDays,
     });
     const reason = ensureValidReason(input.reason);
     ensureValidImages(input.files, 1);
@@ -76,6 +79,13 @@ export class JustificationsService {
       entityId: justification.id,
       description: `${student.fullName} envió una justificación para la clase del ${toDisplayDate(record.date)}`,
       details: { sessionId: input.sessionId, files: input.files.length },
+    });
+    await this.notifier.toAdmins({
+      moduleId: module.id,
+      type: 'JUSTIFICATION_SUBMITTED',
+      title: `${student.fullName} envió una justificación`,
+      body: `Clase del ${toDisplayDate(record.date)} · ${input.files.length} ${input.files.length === 1 ? 'imagen' : 'imágenes'}: ${reason}`,
+      link: '/admin/justificaciones',
     });
     return justification;
   }
@@ -144,6 +154,14 @@ export class JustificationsService {
       description: `Aprobó la justificación de ${student?.fullName ?? 'un estudiante'} como ${STATUS_LABELS[input.status]}`,
       details: { sessionId: justification.sessionId, status: input.status, comment },
     });
+    await this.notifier.toStudents({
+      moduleId: justification.moduleId,
+      studentId: justification.studentId,
+      type: 'JUSTIFICATION_APPROVED',
+      title: `Tu justificación fue aprobada: quedas como ${STATUS_LABELS[input.status]}`,
+      body: comment ? `Comentario del docente: ${comment}` : null,
+      link: '/estudiante',
+    });
     return resolved;
   }
 
@@ -170,6 +188,14 @@ export class JustificationsService {
       entityId: id,
       description: `Rechazó la justificación de ${student?.fullName ?? 'un estudiante'}`,
       details: { sessionId: justification.sessionId, comment: clean },
+    });
+    await this.notifier.toStudents({
+      moduleId: justification.moduleId,
+      studentId: justification.studentId,
+      type: 'JUSTIFICATION_REJECTED',
+      title: 'Tu justificación fue rechazada',
+      body: `Comentario del docente: ${clean}`,
+      link: '/estudiante',
     });
     return resolved;
   }

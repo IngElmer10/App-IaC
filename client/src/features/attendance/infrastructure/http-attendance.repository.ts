@@ -20,8 +20,8 @@ export class HttpAttendanceRepository implements AttendanceRepository {
     return data
   }
 
-  async mark() {
-    const { data } = await http.post<AttendanceRecord>('/attendance/mark')
+  async mark(code?: string) {
+    const { data } = await http.post<AttendanceRecord>('/attendance/mark', code ? { code } : {})
     return data
   }
 
@@ -38,6 +38,14 @@ export class HttpAttendanceRepository implements AttendanceRepository {
   async update(input: UpdateAttendanceInput) {
     const { data } = await http.patch<AttendanceRecord>('/attendance', input)
     return data
+  }
+
+  async certificate(studentId?: number, moduleId?: number) {
+    const url = studentId ? `/attendance/students/${studentId}/certificate` : '/attendance/me/certificate'
+    const response = await http.get<Blob>(url, { responseType: 'blob', params: { moduleId } })
+    const disposition = String(response.headers['content-disposition'] ?? '')
+    const fileName = /filename="([^"]+)"/.exec(disposition)?.[1] ?? 'constancia.pdf'
+    return { blob: response.data, fileName }
   }
 
   async export(moduleId?: number) {

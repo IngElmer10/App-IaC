@@ -9,8 +9,11 @@ export const STORED_STATUSES: StoredAttendanceStatus[] = ['PRESENTE', 'ATRASO', 
  */
 export const BASIC_STATUSES: StoredAttendanceStatus[] = ['PRESENTE', 'FALTA', 'JUSTIFICADO'];
 
-/** Estados que se muestran: los guardados más los derivados de la fecha. */
-export type AttendanceDisplayStatus = StoredAttendanceStatus | 'PENDIENTE' | 'PROGRAMADA';
+/**
+ * Estados que se muestran: los guardados más los derivados de la fecha.
+ * CANCELADA: la clase se canceló; no cuenta como asistencia ni como falta.
+ */
+export type AttendanceDisplayStatus = StoredAttendanceStatus | 'PENDIENTE' | 'PROGRAMADA' | 'CANCELADA';
 
 /**
  * RN-05: la falta no se guarda, se deriva. Sin marca:

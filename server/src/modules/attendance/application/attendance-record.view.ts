@@ -62,12 +62,10 @@ export function buildRecord(
   const closedToday =
     session.classDate === context.today &&
     classifyMoment(markWindowFor(context.rules, session), context.time) === 'CLOSED';
-  const status = resolveAttendanceStatus(
-    attendance?.status ?? null,
-    session.classDate,
-    context.today,
-    closedToday,
-  );
+  const status: AttendanceDisplayStatus =
+    session.status === 'CANCELLED'
+      ? 'CANCELADA'
+      : resolveAttendanceStatus(attendance?.status ?? null, session.classDate, context.today, closedToday);
   return {
     sessionId: session.id,
     date: session.classDate,

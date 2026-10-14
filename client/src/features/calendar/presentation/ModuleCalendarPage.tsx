@@ -7,6 +7,8 @@ import { PageHeader } from '../../../shared/ui/PageHeader'
 import { PageLoader } from '../../../shared/ui/Spinner'
 import { useActiveModule } from '../../academic-modules/application/academic-modules.queries'
 import { AttendanceRulesCard } from '../../academic-modules/presentation/AttendanceRulesCard'
+import { ManageSessionsCard } from '../../class-sessions/presentation/ManageSessionsCard'
+import { SessionChangesHistory } from '../../class-sessions/presentation/SessionChangesHistory'
 import { useClassSessions } from '../../attendance/application/attendance.queries'
 import { useProfile, useProfilePhotoUrl } from '../../profile/application/profile.queries'
 import { teacherDisplayName } from '../../profile/domain/profile'
@@ -72,7 +74,11 @@ export function ModuleCalendarPage() {
         cardRef={image.ref}
       />
 
-      <div className="mt-6 print:hidden">
+      <div className="mt-6 space-y-6 print:hidden">
+        <div className="grid gap-6 xl:grid-cols-2 *:min-w-0">
+          <ManageSessionsCard />
+          <SessionChangesHistory moduleName={data.name} />
+        </div>
         <AttendanceRulesCard key={JSON.stringify(data.rules)} rules={data.rules} sampleClass={sessions.data[0]} />
       </div>
     </>

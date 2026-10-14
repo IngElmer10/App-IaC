@@ -2,6 +2,7 @@ import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@ne
 import { Clock } from '../../../shared/application/clock.port';
 import type { AuthUser } from '../../../shared/domain/auth-user';
 import { ActivityRecorder } from '../../activity/application/activity-recorder.service';
+import { Notifier } from '../../notifications/application/notifier.service';
 import type { AcademicModule } from '../domain/academic-module';
 import { AcademicModuleRepository } from '../domain/academic-module.repository';
 
@@ -19,6 +20,7 @@ export class ScheduledActivationService implements OnApplicationBootstrap, OnMod
   constructor(
     private readonly repository: AcademicModuleRepository,
     private readonly activity: ActivityRecorder,
+    private readonly notifier: Notifier,
     private readonly clock: Clock,
   ) {}
 
@@ -64,6 +66,13 @@ export class ScheduledActivationService implements OnApplicationBootstrap, OnMod
         ? `Activó antes de tiempo el módulo programado "${module.name}"`
         : `Se activó automáticamente el módulo programado "${module.name}"`,
       details: { previousModuleId: previous?.id ?? null, previousModuleName: previous?.name ?? null },
+    });
+    await this.notifier.toAdmins({
+      moduleId: module.id,
+      type: 'MODULE_ACTIVATED',
+      title: admin ? `Activaste el módulo "${module.name}"` : `Se activó automáticamente el módulo "${module.name}"`,
+      body: previous ? `El módulo "${previous.name}" pasó a Finalizado; sus datos siguen en Módulos.` : null,
+      link: '/admin',
     });
     return module;
   }

@@ -33,4 +33,12 @@ export class AttendanceRulesDto {
   @Min(0)
   @Max(100, { message: 'El mínimo de asistencia debe estar entre 0 y 100' })
   minAttendancePercentage: number;
+
+  @IsInt()
+  @Min(0)
+  @Max(30, { message: 'El plazo para justificar puede ser de hasta 30 días' })
+  justificationDays: number;
+
+  @IsBoolean()
+  requireClassCode: boolean;
 }

@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   CalendarDays,
   ClipboardList,
   CornerDownLeft,
@@ -23,6 +24,7 @@ const PAGES: { to: string; label: string; keywords: string; icon: LucideIcon }[]
   { to: '/admin', label: 'Resumen', keywords: 'inicio dashboard', icon: LayoutDashboard },
   { to: '/admin/asistencias', label: 'Asistencias', keywords: 'presentes faltas exportar excel', icon: ClipboardList },
   { to: '/admin/calendario', label: 'Calendario', keywords: 'fechas horario reglas puntualidad compartir', icon: CalendarDays },
+  { to: '/admin/reportes', label: 'Reportes', keywords: 'graficos estadisticas ranking riesgo comparacion', icon: BarChart3 },
   { to: '/admin/estudiantes', label: 'Estudiantes', keywords: 'lista alumnos', icon: Users },
   { to: '/admin/justificaciones', label: 'Justificaciones', keywords: 'casos especiales pruebas imagenes faltas', icon: FileClock },
   { to: '/admin/actividades', label: 'Actividades', keywords: 'historial acciones', icon: History },

@@ -3,6 +3,8 @@ import { HttpAcademicModuleRepository } from '../features/academic-modules/infra
 import { HttpActivityRepository } from '../features/activity/infrastructure/http-activity.repository'
 import { HttpAttendanceRepository } from '../features/attendance/infrastructure/http-attendance.repository'
 import { HttpAuthRepository } from '../features/auth/infrastructure/http-auth.repository'
+import { HttpSessionRepository } from '../features/class-sessions/infrastructure/http-session.repository'
+import { HttpNotificationRepository } from '../features/notifications/infrastructure/http-notification.repository'
 import { HttpJustificationRepository } from '../features/justifications/infrastructure/http-justification.repository'
 import { HttpProfileRepository } from '../features/profile/infrastructure/http-profile.repository'
 import { HttpStudentRepository } from '../features/students/infrastructure/http-student.repository'
@@ -16,4 +18,6 @@ export const dependencies: Dependencies = {
   modules: new HttpAcademicModuleRepository(),
   profile: new HttpProfileRepository(),
   justifications: new HttpJustificationRepository(),
+  sessions: new HttpSessionRepository(),
+  notifications: new HttpNotificationRepository(),
 }

@@ -7,19 +7,27 @@ import { useToast } from '../../../shared/ui/toast'
 import type { AttendanceRecord } from '../../attendance/domain/attendance'
 import { StatusChip } from '../../attendance/presentation/StatusChip'
 import { useSubmitJustification } from '../application/justifications.queries'
-import { imagesError, JUSTIFY_WINDOW_DAYS } from '../domain/justification'
+import { imagesError } from '../domain/justification'
 import { ImagePicker } from './ImagePicker'
 
 /** El estudiante justifica una falta o un atraso con un motivo y hasta 4 imágenes de prueba. */
-export function JustifyDialog({ record, onClose }: { record: AttendanceRecord | null; onClose: () => void }) {
+export function JustifyDialog({
+  record,
+  windowDays,
+  onClose,
+}: {
+  record: AttendanceRecord | null
+  windowDays: number
+  onClose: () => void
+}) {
   return (
     <Modal open={record !== null} onClose={onClose} title="Justificar inasistencia" size="lg">
-      {record && <JustifyForm key={record.sessionId} record={record} onClose={onClose} />}
+      {record && <JustifyForm key={record.sessionId} record={record} windowDays={windowDays} onClose={onClose} />}
     </Modal>
   )
 }
 
-function JustifyForm({ record, onClose }: { record: AttendanceRecord; onClose: () => void }) {
+function JustifyForm({ record, windowDays, onClose }: { record: AttendanceRecord; windowDays: number; onClose: () => void }) {
   const submit = useSubmitJustification()
   const toast = useToast()
   const [reason, setReason] = useState('')
@@ -78,7 +86,7 @@ function JustifyForm({ record, onClose }: { record: AttendanceRecord; onClose: (
       {error && <p className="rounded-xl bg-alert-soft px-4 py-3 text-sm font-medium text-alert-ink">{error}</p>}
       <p className="text-xs text-muted">
         Tu docente revisará la justificación y decidirá si cambia tu asistencia. Puedes justificar hasta{' '}
-        {JUSTIFY_WINDOW_DAYS} días después de la clase.
+        {windowDays} {windowDays === 1 ? 'día' : 'días'} después de la clase.
       </p>
 
       <div className="flex justify-end gap-2">

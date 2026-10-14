@@ -26,7 +26,7 @@ const image = (overrides: Partial<{ mimetype: string; size: number }> = {}) => (
 });
 
 describe('ensureStudentCanJustify', () => {
-  const base = { status: 'FALTA' as const, classDate: '2026-10-12', today: '2026-10-14', existing: [] };
+  const base = { status: 'FALTA' as const, classDate: '2026-10-12', today: '2026-10-14', existing: [], windowDays: 3 };
 
   it('permite justificar una falta o un atraso dentro de los 3 días', () => {
     expect(() => ensureStudentCanJustify(base)).not.toThrow();
@@ -37,6 +37,11 @@ describe('ensureStudentCanJustify', () => {
     expect(() => ensureStudentCanJustify({ ...base, status: 'PRESENTE' })).toThrow(BusinessRuleError);
     expect(() => ensureStudentCanJustify({ ...base, classDate: '2026-10-15' })).toThrow(BusinessRuleError);
     expect(() => ensureStudentCanJustify({ ...base, classDate: '2026-10-10' })).toThrow(BusinessRuleError);
+  });
+
+  it('usa el plazo configurado del módulo; 0 desactiva las justificaciones del estudiante', () => {
+    expect(() => ensureStudentCanJustify({ ...base, classDate: '2026-10-05', windowDays: 10 })).not.toThrow();
+    expect(() => ensureStudentCanJustify({ ...base, classDate: '2026-10-13', windowDays: 0 })).toThrow(BusinessRuleError);
   });
 
   it('no permite otra solicitud si hay una pendiente o aprobada, pero sí tras un rechazo', () => {

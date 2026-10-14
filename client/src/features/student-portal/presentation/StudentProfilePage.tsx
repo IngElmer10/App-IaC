@@ -7,6 +7,7 @@ import { EmptyState } from '../../../shared/ui/EmptyState'
 import { PageLoader } from '../../../shared/ui/Spinner'
 import { useMyAttendance } from '../../attendance/application/attendance.queries'
 import { AttendanceStats, RiskBanner } from '../../attendance/presentation/AttendanceStats'
+import { CertificateButton } from '../../attendance/presentation/CertificateButton'
 import { useTeacher } from '../../profile/application/profile.queries'
 import { teacherDisplayName } from '../../profile/domain/profile'
 import { Avatar } from '../../profile/presentation/Avatar'
@@ -37,6 +38,9 @@ export function StudentProfilePage() {
           <div className="min-w-0 sm:pb-1">
             <h1 className="text-2xl font-extrabold tracking-tight">{student.fullName}</h1>
             <p className="text-sm text-muted">Estudiante · {data.module.name}</p>
+          </div>
+          <div className="sm:ml-auto sm:pb-1">
+            <CertificateButton label="Descargar mi constancia" />
           </div>
         </div>
       </Card>

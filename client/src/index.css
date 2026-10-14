@@ -40,6 +40,15 @@
   --color-violet-soft: #ece9fe;
   --color-violet-ink: #6d5ae6;
 
+  /*
+   * Gráficos: los mismos estados (Presente, Atraso, Justificado, Falta), en ese orden.
+   * Validados para daltonismo y contraste (claro y oscuro).
+   */
+  --color-chart-present: #5046e5;
+  --color-chart-late: #d97706;
+  --color-chart-excused: #0284c7;
+  --color-chart-absent: #e8590c;
+
   /* Base de la interfaz */
   --color-canvas: #f5f6fb;
   --color-surface: #ffffff;
@@ -86,6 +95,11 @@
     --color-info-ink: #8fd6fb;
 
     --color-violet-soft: #2a2552;
+
+    --color-chart-present: #6f66f0;
+    --color-chart-late: #c07a0c;
+    --color-chart-excused: #2a9ad0;
+    --color-chart-absent: #de5f22;
     --color-violet-ink: #b3a8ff;
 
     --color-canvas: #0d0f1c;

@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import type { SessionStatus } from '../../domain/class-session';
 
 @Entity('class_sessions')
 export class ClassSessionOrmEntity {
@@ -17,4 +18,13 @@ export class ClassSessionOrmEntity {
 
   @Column({ name: 'end_time', type: 'time' })
   endTime: string;
+
+  @Column({ type: 'varchar', length: 12, default: 'SCHEDULED' })
+  status: SessionStatus;
+
+  @Column({ name: 'is_makeup', type: 'boolean', default: false })
+  isMakeup: boolean;
+
+  @Column({ name: 'class_code', type: 'varchar', length: 12, nullable: true })
+  classCode: string | null;
 }

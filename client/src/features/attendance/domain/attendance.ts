@@ -1,7 +1,8 @@
 import type { AttendanceRules, ExtraField, ModuleStatus } from '../../academic-modules/domain/academic-module'
 
 export type EditableStatus = 'PRESENTE' | 'ATRASO' | 'FALTA' | 'JUSTIFICADO'
-export type AttendanceStatus = EditableStatus | 'PENDIENTE' | 'PROGRAMADA'
+/** CANCELADA: la clase se canceló; no cuenta como asistencia ni como falta. */
+export type AttendanceStatus = EditableStatus | 'PENDIENTE' | 'PROGRAMADA' | 'CANCELADA'
 export type AttendanceSource = 'STUDENT' | 'ADMIN'
 
 /** Estados disponibles sin reglas de puntualidad (RF-07 más Justificado) y con ellas (además Atraso). */
@@ -23,6 +24,12 @@ export interface ClassSession {
   classDate: string
   startTime: string
   endTime: string
+  /** CANCELLED: clase cancelada (no cuenta). */
+  status: 'SCHEDULED' | 'CANCELLED'
+  /** Clase de recuperación agregada después de activar el módulo. */
+  isMakeup: boolean
+  /** Código que el estudiante escribe para marcar (solo lo recibe el admin). */
+  classCode: string | null
 }
 
 export interface AttendanceRecord {
@@ -128,4 +135,5 @@ export const STATUS_LABELS: Record<AttendanceStatus, string> = {
   JUSTIFICADO: 'Justificado',
   PENDIENTE: 'Pendiente',
   PROGRAMADA: 'Programada',
+  CANCELADA: 'Cancelada',
 }

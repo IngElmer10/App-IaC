@@ -33,6 +33,7 @@ import { useActivity } from '../../activity/application/activity.queries'
 import { useAttendanceOverview } from '../../attendance/application/attendance.queries'
 import type { AttendanceOverview } from '../../attendance/domain/attendance'
 import { todayIso } from '../../calendar/domain/calendar'
+import { ClassCodeCard } from '../../class-sessions/presentation/ClassCodeCard'
 import { UsageGuideDialog } from './UsageGuideDialog'
 
 /** Resumen del administrador: compone datos de varias features. */
@@ -205,6 +206,8 @@ function ModuleOverview({ module, data }: { module: ActiveModule; data: Attendan
           </div>
         </div>
       </Card>
+
+      <ClassCodeCard />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 *:min-w-0">
         <StatCard

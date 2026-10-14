@@ -23,6 +23,8 @@ export function useProfilePhotoUrl(): string | null {
     queryFn: async () => toDataUrl(await profile.getPhoto()),
     enabled: current?.hasPhoto === true,
     staleTime: Infinity,
+    // Las imágenes no cambian: no se vuelven a descargar periódicamente.
+    refetchInterval: false,
   })
   return current?.hasPhoto ? (url ?? null) : null
 }
@@ -41,6 +43,8 @@ export function useTeacherPhotoUrl(moduleId?: number): string | null {
     queryFn: async () => toDataUrl(await profile.getTeacherPhoto(moduleId)),
     enabled: teacher?.hasPhoto === true,
     staleTime: Infinity,
+    // Las imágenes no cambian: no se vuelven a descargar periódicamente.
+    refetchInterval: false,
   })
   return teacher?.hasPhoto ? (url ?? null) : null
 }
@@ -60,6 +64,8 @@ function useProfileMutation<T>(mutationFn: (input: T) => Promise<TeacherProfile>
     mutationFn,
     onSuccess: (updated) => {
       queryClient.setQueryData(profileKeys.profile, updated)
+      // El docente también se muestra en calendarios e historial de módulos.
+      void queryClient.invalidateQueries({ queryKey: ['teacher'] })
       if (photoChanged) void queryClient.invalidateQueries({ queryKey: profileKeys.photo })
     },
   })
@@ -78,4 +84,12 @@ export function useUploadPhoto() {
 export function useRemovePhoto() {
   const { profile } = useDependencies()
   return useProfileMutation(() => profile.removePhoto(), true)
+}
+
+export function useChangePassword() {
+  const { profile } = useDependencies()
+  return useMutation({
+    mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
+      profile.changePassword(currentPassword, newPassword),
+  })
 }

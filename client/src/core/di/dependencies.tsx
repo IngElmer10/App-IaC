@@ -3,6 +3,8 @@ import type { AcademicModuleRepository } from '../../features/academic-modules/d
 import type { ActivityRepository } from '../../features/activity/domain/activity.repository'
 import type { AttendanceRepository } from '../../features/attendance/domain/attendance.repository'
 import type { AuthRepository } from '../../features/auth/domain/auth.repository'
+import type { SessionRepository } from '../../features/class-sessions/domain/session.repository'
+import type { NotificationRepository } from '../../features/notifications/domain/notification.repository'
 import type { JustificationRepository } from '../../features/justifications/domain/justification.repository'
 import type { ProfileRepository } from '../../features/profile/domain/profile.repository'
 import type { StudentRepository } from '../../features/students/domain/student.repository'
@@ -16,6 +18,8 @@ export interface Dependencies {
   modules: AcademicModuleRepository
   profile: ProfileRepository
   justifications: JustificationRepository
+  sessions: SessionRepository
+  notifications: NotificationRepository
 }
 
 const DependenciesContext = createContext<Dependencies | null>(null)

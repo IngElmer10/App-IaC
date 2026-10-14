@@ -5,6 +5,9 @@ export interface CalendarSession {
   classDate: string
   startTime: string
   endTime: string
+  /** CANCELLED: se muestra tachada y no cuenta en totales ni en el horario. */
+  status?: 'SCHEDULED' | 'CANCELLED'
+  isMakeup?: boolean
 }
 
 export const WEEKDAYS_SHORT = ['lu', 'ma', 'mi', 'ju', 'vi', 'sá', 'do']

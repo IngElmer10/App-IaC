@@ -19,6 +19,13 @@ export interface AttendanceRules {
   latePoints: number;
   /** Por debajo de este porcentaje el estudiante queda en riesgo. */
   minAttendancePercentage: number;
+  /**
+   * Días después de la clase en que el estudiante puede enviar una justificación.
+   * 0 = los estudiantes no pueden enviarlas (el admin igual puede corregir con pruebas).
+   */
+  justificationDays: number;
+  /** El estudiante debe escribir el código de la clase que da el docente para poder marcar. */
+  requireClassCode: boolean;
 }
 
 export const DEFAULT_ATTENDANCE_RULES: AttendanceRules = {
@@ -29,6 +36,8 @@ export const DEFAULT_ATTENDANCE_RULES: AttendanceRules = {
   presentPoints: 2,
   latePoints: 1,
   minAttendancePercentage: 80,
+  justificationDays: 3,
+  requireClassCode: false,
 };
 
 export function ensureValidRules(rules: AttendanceRules): void {

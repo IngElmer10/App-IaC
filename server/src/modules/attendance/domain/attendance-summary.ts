@@ -40,6 +40,8 @@ export function summarize(
   statuses: AttendanceDisplayStatus[],
   scoring: Scoring = DEFAULT_ATTENDANCE_RULES,
 ): AttendanceSummary {
+  // Las clases canceladas no forman parte del módulo para el resumen.
+  statuses = statuses.filter((s) => s !== 'CANCELADA');
   const summary: AttendanceSummary = {
     total: statuses.length,
     presentes: 0,

@@ -49,7 +49,6 @@ export const JUSTIFICATION_STATUS_LABELS: Record<JustificationStatus, string> = 
 }
 
 /** Mismas reglas que el servidor, para mostrar u ocultar el botón "Justificar". */
-export const JUSTIFY_WINDOW_DAYS = 3
 export const MAX_FILES = 4
 export const MAX_FILE_BYTES = 3 * 1024 * 1024
 export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -61,10 +60,13 @@ export function canJustify(
   record: { status: AttendanceStatus; date: string },
   today: string,
   existing: Justification[],
+  /** Plazo del módulo; 0 = los estudiantes no pueden justificar. */
+  windowDays: number,
 ): boolean {
+  if (windowDays <= 0) return false
   if (record.status !== 'FALTA' && record.status !== 'ATRASO') return false
   const days = daysBetween(record.date, today)
-  if (days < 0 || days > JUSTIFY_WINDOW_DAYS) return false
+  if (days < 0 || days > windowDays) return false
   return !existing.some((j) => j.status === 'PENDING' || j.status === 'APPROVED')
 }
 

@@ -36,6 +36,7 @@ import { calendarSummaryText } from '../../calendar/domain/calendar'
 import { CalendarShareActions, ModuleCalendarCard } from '../../calendar/presentation/ModuleCalendarCard'
 import { useTeacher, useTeacherPhotoUrl } from '../../profile/application/profile.queries'
 import { teacherDisplayName } from '../../profile/domain/profile'
+import { SessionChangesHistory } from '../../class-sessions/presentation/SessionChangesHistory'
 import { StudentsView } from '../../students/presentation/StudentsPage'
 import { ModuleStatusChip } from './ModuleStatusChip'
 import { ScheduledModuleActions } from './ScheduledModuleActions'
@@ -221,6 +222,10 @@ function SummaryTab({ module }: { module: ActiveModule }) {
             <li>
               <strong>Asistencia mínima:</strong> {rules.minAttendancePercentage}%
             </li>
+            <li>
+              <strong>Justificaciones de estudiantes:</strong>{' '}
+              {rules.justificationDays > 0 ? `hasta ${rules.justificationDays} días después de la clase` : 'desactivadas'}
+            </li>
           </ul>
         </Card>
       </div>
@@ -274,6 +279,7 @@ function CalendarTab({ module }: { module: ActiveModule }) {
         teacherPhotoUrl={photoUrl}
         cardRef={image.ref}
       />
+      <SessionChangesHistory moduleId={module.id} moduleName={module.name} />
     </div>
   )
 }

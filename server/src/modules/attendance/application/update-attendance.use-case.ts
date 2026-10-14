@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Clock } from '../../../shared/application/clock.port';
 import type { AuthUser } from '../../../shared/domain/auth-user';
 import { toDisplayDate } from '../../../shared/domain/display-date';
-import { NotFoundError } from '../../../shared/domain/errors';
+import { BusinessRuleError, NotFoundError } from '../../../shared/domain/errors';
 import { ActiveModuleService } from '../../academic-modules/application/active-module.service';
 import { ActivityRecorder } from '../../activity/application/activity-recorder.service';
 import { ClassSessionRepository } from '../../class-sessions/domain/class-session.repository';
@@ -45,6 +45,9 @@ export class UpdateAttendanceUseCase {
     }
     if (!session || session.moduleId !== module.id) {
       throw new NotFoundError('La fecha de clase no pertenece al módulo activo');
+    }
+    if (session.status === 'CANCELLED') {
+      throw new BusinessRuleError('Esa clase fue cancelada; restáurala para registrar asistencia');
     }
 
     const context = { today: this.clock.today(), time: this.clock.currentTime(), rules: module.rules };

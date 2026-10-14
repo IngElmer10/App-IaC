@@ -4,7 +4,12 @@ import { AcademicModulesModule } from '../academic-modules/academic-modules.modu
 import { ActivityModule } from '../activity/activity.module';
 import { ClassSessionsModule } from '../class-sessions/class-sessions.module';
 import { StudentsModule } from '../students/students.module';
+import { AdminsModule } from '../admins/admins.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { AttendanceExporter } from './application/attendance-exporter.port';
+import { CertificateRenderer } from './application/certificate-renderer.port';
+import { GetCertificateUseCase } from './application/get-certificate.use-case';
+import { PdfkitCertificateRenderer } from './infrastructure/pdf/pdfkit-certificate.renderer';
 import { ExportAttendanceUseCase } from './application/export-attendance.use-case';
 import { GetAttendanceOverviewUseCase } from './application/get-attendance-overview.use-case';
 import { GetMyAttendanceUseCase } from './application/get-my-attendance.use-case';
@@ -27,11 +32,15 @@ import { TypeormAttendanceRepository } from './infrastructure/persistence/typeor
     StudentsModule,
     ClassSessionsModule,
     ActivityModule,
+    AdminsModule,
+    NotificationsModule,
   ],
   controllers: [AttendanceController],
   providers: [
     { provide: AttendanceRepository, useClass: TypeormAttendanceRepository },
     { provide: AttendanceExporter, useClass: ExcelAttendanceExporter },
+    { provide: CertificateRenderer, useClass: PdfkitCertificateRenderer },
+    GetCertificateUseCase,
     StudentContextService,
     StudentHistoryService,
     GetStudentAttendanceUseCase,

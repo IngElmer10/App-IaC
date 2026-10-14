@@ -23,6 +23,7 @@ const SHORT: Record<AttendanceDisplayStatus, string> = {
   ATRASO: 'A',
   FALTA: 'F',
   JUSTIFICADO: 'J',
+  CANCELADA: 'C',
   PENDIENTE: '·',
   PROGRAMADA: '',
 };
@@ -59,8 +60,8 @@ export class ExcelAttendanceExporter extends AttendanceExporter {
     sheet.getCell('A1').font = { bold: true, size: 14, color: { argb: PALETTE.primary } };
     sheet.getCell('A2').value = `Generado el ${formatDate(overview.today)} · ${
       overview.rules.enabled
-        ? 'P = Presente, A = Atraso, F = Falta, J = Justificado'
-        : 'P = Presente, F = Falta'
+        ? 'P = Presente, A = Atraso, F = Falta, J = Justificado, C = Clase cancelada'
+        : 'P = Presente, F = Falta, J = Justificado, C = Clase cancelada'
     }`;
     sheet.getCell('A2').font = { italic: true, color: { argb: PALETTE.muted } };
 

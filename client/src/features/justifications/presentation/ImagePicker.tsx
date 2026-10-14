@@ -14,8 +14,16 @@ const readPreview = (file: File) =>
     reader.readAsDataURL(file)
   })
 
-/** Selector de hasta 4 imágenes de prueba, con vista previa y opción de quitar cada una. */
-export function ImagePicker({ files, onChange }: { files: File[]; onChange: (files: File[]) => void }) {
+/** Selector de imágenes (por defecto hasta 4), con vista previa y opción de quitar cada una. */
+export function ImagePicker({
+  files,
+  onChange,
+  max = MAX_FILES,
+}: {
+  files: File[]
+  onChange: (files: File[]) => void
+  max?: number
+}) {
   const id = useId()
   const [picked, setPicked] = useState<Picked[]>([])
   // Si el formulario se reinicia desde afuera, también se limpian las vistas previas.
@@ -23,7 +31,7 @@ export function ImagePicker({ files, onChange }: { files: File[]; onChange: (fil
 
   const add = async (list: FileList | null) => {
     if (!list) return
-    const incoming = [...list].slice(0, MAX_FILES - shown.length)
+    const incoming = [...list].slice(0, max - shown.length)
     const next = [...shown, ...(await Promise.all(incoming.map(async (file) => ({ file, preview: await readPreview(file) }))))]
     setPicked(next)
     onChange(next.map((p) => p.file))
@@ -51,7 +59,7 @@ export function ImagePicker({ files, onChange }: { files: File[]; onChange: (fil
             </button>
           </div>
         ))}
-        {shown.length < MAX_FILES && (
+        {shown.length < max && (
           <label
             htmlFor={id}
             className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-line text-center text-xs font-semibold text-muted transition hover:border-brand/50 hover:text-brand"
@@ -59,7 +67,7 @@ export function ImagePicker({ files, onChange }: { files: File[]; onChange: (fil
             <ImagePlus className="size-6" />
             Agregar imagen
             <span className="font-normal">
-              {shown.length}/{MAX_FILES}
+              {shown.length}/{max}
             </span>
           </label>
         )}
@@ -75,7 +83,7 @@ export function ImagePicker({ files, onChange }: { files: File[]; onChange: (fil
           e.target.value = ''
         }}
       />
-      <p className="mt-2 text-xs text-muted">Hasta {MAX_FILES} imágenes JPG, PNG o WEBP de máximo 3 MB cada una.</p>
+      <p className="mt-2 text-xs text-muted">Hasta {max} imágenes JPG, PNG o WEBP de máximo 3 MB cada una.</p>
     </div>
   )
 }

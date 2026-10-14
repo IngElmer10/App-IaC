@@ -27,6 +27,22 @@ export function ensureStudentCanMark(hasSessionToday: boolean, existing: Attenda
   }
 }
 
+/**
+ * Código de clase (opcional por módulo): el estudiante escribe el que dio el docente.
+ * Se compara sin distinguir mayúsculas ni espacios.
+ */
+export function ensureClassCode(required: boolean, expected: string | null, given: string | undefined): void {
+  if (!required) return;
+  if (!expected) {
+    throw new BusinessRuleError('El docente todavía no publicó el código de esta clase. Espera a que lo indique.');
+  }
+  const normalize = (code: string) => code.replace(/\s+/g, '').toUpperCase();
+  if (!given?.trim()) throw new BusinessRuleError('Escribe el código de la clase que te dio el docente');
+  if (normalize(given) !== normalize(expected)) {
+    throw new BusinessRuleError('El código de la clase no es correcto');
+  }
+}
+
 /** Estado que corresponde a una marca del estudiante según la hora; sin reglas siempre es Presente. */
 export function statusForStudentMark(window: MarkWindow | null, time: string): StoredAttendanceStatus {
   switch (classifyMoment(window, time)) {

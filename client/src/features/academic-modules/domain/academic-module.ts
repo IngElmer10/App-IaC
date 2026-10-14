@@ -10,6 +10,10 @@ export interface AttendanceRules {
   presentPoints: number
   latePoints: number
   minAttendancePercentage: number
+  /** Días después de la clase en que el estudiante puede justificar; 0 = no puede. */
+  justificationDays: number
+  /** El estudiante debe escribir el código de la clase para marcar. */
+  requireClassCode: boolean
 }
 
 /** ACTIVE: en uso. SCHEDULED: se activará en `scheduledFor`. CLOSED: finalizado (solo lectura). */

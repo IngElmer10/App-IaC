@@ -2,8 +2,6 @@ import { BusinessRuleError, ConflictError, ValidationError } from '../../../shar
 import type { AttendanceDisplayStatus } from '../../attendance/domain/attendance-status';
 import type { Justification, UploadedImage } from './justification';
 
-/** Días después de la clase en que el estudiante todavía puede justificar. */
-export const JUSTIFY_WINDOW_DAYS = 3;
 export const MAX_JUSTIFICATION_FILES = 4;
 export const MAX_JUSTIFICATION_FILE_BYTES = 3 * 1024 * 1024;
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -17,15 +15,20 @@ export function ensureStudentCanJustify(input: {
   classDate: string;
   today: string;
   existing: Justification[];
+  /** Plazo del módulo; 0 = los estudiantes no pueden justificar. */
+  windowDays: number;
 }): void {
+  if (input.windowDays <= 0) {
+    throw new BusinessRuleError('En este módulo las justificaciones las registra solo el docente. Consulta con él.');
+  }
   if (input.status !== 'FALTA' && input.status !== 'ATRASO') {
     throw new BusinessRuleError('Solo puedes justificar una falta o un atraso');
   }
   const days = daysBetween(input.classDate, input.today);
   if (days < 0) throw new BusinessRuleError('No puedes justificar una clase que todavía no ocurrió');
-  if (days > JUSTIFY_WINDOW_DAYS) {
+  if (days > input.windowDays) {
     throw new BusinessRuleError(
-      `El plazo para justificar es de ${JUSTIFY_WINDOW_DAYS} días después de la clase. Consulta con tu docente.`,
+      `El plazo para justificar es de ${input.windowDays} ${input.windowDays === 1 ? 'día' : 'días'} después de la clase. Consulta con tu docente.`,
     );
   }
   if (input.existing.some((j) => j.status === 'PENDING')) {
@@ -43,12 +46,12 @@ export function ensureValidReason(reason: string): string {
   return clean;
 }
 
-export function ensureValidImages(files: UploadedImage[], minimum: number): void {
+export function ensureValidImages(files: UploadedImage[], minimum: number, maximum = MAX_JUSTIFICATION_FILES): void {
   if (files.length < minimum) {
     throw new ValidationError(`Adjunta al menos ${minimum} imagen${minimum === 1 ? '' : 'es'} como prueba`);
   }
-  if (files.length > MAX_JUSTIFICATION_FILES) {
-    throw new ValidationError(`Puedes adjuntar hasta ${MAX_JUSTIFICATION_FILES} imágenes`);
+  if (files.length > maximum) {
+    throw new ValidationError(`Puedes adjuntar hasta ${maximum} imágenes`);
   }
   for (const file of files) {
     if (!IMAGE_TYPES.includes(file.mimetype)) {

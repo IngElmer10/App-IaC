@@ -15,6 +15,10 @@ const queryClient = new QueryClient({
       },
       refetchOnWindowFocus: true,
       staleTime: 15_000,
+      // Lo que hacen otros usuarios (marcas, cambios de clases, justificaciones…) aparece solo,
+      // sin recargar: se vuelve a consultar cada 30 s mientras la pestaña está visible.
+      refetchInterval: 30_000,
+      refetchIntervalInBackground: false,
     },
   },
 })

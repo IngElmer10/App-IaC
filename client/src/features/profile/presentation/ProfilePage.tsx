@@ -10,6 +10,7 @@ import { PageLoader } from '../../../shared/ui/Spinner'
 import { useToast } from '../../../shared/ui/toast'
 import { useProfile, useRemovePhoto, useUpdateProfile, useUploadPhoto } from '../application/profile.queries'
 import { teacherDisplayName, type TeacherProfile } from '../domain/profile'
+import { ChangePasswordCard } from './ChangePasswordCard'
 import { TeacherAvatar } from './TeacherAvatar'
 
 /** Datos del docente (el administrador) que se muestran en el calendario del módulo. */
@@ -30,7 +31,10 @@ export function ProfilePage() {
       <PageHeader title="Mi perfil" description="Tus datos como docente del módulo. Aparecen en el calendario de clases." />
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
         <PhotoCard profile={data} />
-        <ProfileForm key={data.id} profile={data} />
+        <div className="space-y-5">
+          <ProfileForm key={data.id} profile={data} />
+          <ChangePasswordCard />
+        </div>
       </div>
     </>
   )

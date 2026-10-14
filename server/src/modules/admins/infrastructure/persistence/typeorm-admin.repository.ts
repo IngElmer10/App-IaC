@@ -22,6 +22,10 @@ export class TypeormAdminRepository extends AdminRepository {
       .getOne();
   }
 
+  async updatePasswordHash(id: number, passwordHash: string): Promise<void> {
+    await this.repo.update({ id }, { passwordHash });
+  }
+
   findById(id: number): Promise<Admin | null> {
     return this.repo.findOneBy({ id });
   }

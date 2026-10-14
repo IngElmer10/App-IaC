@@ -14,11 +14,12 @@ import type { AuthUser } from '../../../../shared/domain/auth-user';
 import { CurrentUser, Roles } from '../../../../shared/infrastructure/security/decorators';
 import { ExportAttendanceUseCase } from '../../application/export-attendance.use-case';
 import { GetAttendanceOverviewUseCase } from '../../application/get-attendance-overview.use-case';
+import { GetCertificateUseCase } from '../../application/get-certificate.use-case';
 import { GetMyAttendanceUseCase } from '../../application/get-my-attendance.use-case';
 import { GetStudentAttendanceUseCase } from '../../application/get-student-attendance.use-case';
 import { MarkAttendanceUseCase } from '../../application/mark-attendance.use-case';
 import { UpdateAttendanceUseCase } from '../../application/update-attendance.use-case';
-import { AttendanceOverviewQueryDto, UpdateAttendanceDto } from './attendance.dto';
+import { AttendanceOverviewQueryDto, MarkAttendanceDto, UpdateAttendanceDto } from './attendance.dto';
 
 @Controller('attendance')
 export class AttendanceController {
@@ -29,6 +30,7 @@ export class AttendanceController {
     private readonly updateAttendance: UpdateAttendanceUseCase,
     private readonly exportAttendance: ExportAttendanceUseCase,
     private readonly getStudentAttendance: GetStudentAttendanceUseCase,
+    private readonly certificates: GetCertificateUseCase,
   ) {}
 
   @Get('me')
@@ -37,11 +39,26 @@ export class AttendanceController {
     return this.getMyAttendance.execute(user);
   }
 
+  @Get('me/certificate')
+  @Roles('STUDENT')
+  async myCertificate(@CurrentUser() user: AuthUser) {
+    return pdf(await this.certificates.forStudent(user));
+  }
+
+  @Get('students/:studentId/certificate')
+  @Roles('ADMIN')
+  async certificate(
+    @Param('studentId', ParseIntPipe) studentId: number,
+    @Query('moduleId', new ParseIntPipe({ optional: true })) moduleId?: number,
+  ) {
+    return pdf(await this.certificates.forAdmin(studentId, moduleId));
+  }
+
   @Post('mark')
   @HttpCode(201)
   @Roles('STUDENT')
-  mark(@CurrentUser() user: AuthUser) {
-    return this.markAttendance.execute(user);
+  mark(@CurrentUser() user: AuthUser, @Body() body: MarkAttendanceDto) {
+    return this.markAttendance.execute(user, body.code);
   }
 
   @Get()
@@ -78,3 +95,6 @@ export class AttendanceController {
     });
   }
 }
+
+const pdf = ({ file, fileName }: { file: Buffer; fileName: string }) =>
+  new StreamableFile(file, { type: 'application/pdf', disposition: `attachment; filename="${fileName}"` });

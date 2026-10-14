@@ -1,4 +1,4 @@
-import { AlarmClock, AlertTriangle, CalendarClock, CheckCircle2, FileWarning, Rocket, ShieldAlert } from 'lucide-react'
+import { AlarmClock, AlertTriangle, CalendarClock, CheckCircle2, FileWarning, Rocket, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { getErrorDetails, getErrorMessage } from '../../../core/http/api-error'
@@ -20,7 +20,10 @@ import {
   useValidateDraft,
 } from '../application/academic-modules.queries'
 import type { ImportDraft, ImportErrors } from '../domain/academic-module'
+import { useClassSessions } from '../../attendance/application/attendance.queries'
+import { scheduleConflicts } from '../domain/schedule-conflicts'
 import { ImportDraftEditor, type ExtraSelection } from './ImportDraftEditor'
+import { ScheduleConflictNotice } from './ScheduleConflictNotice'
 
 /** RF-11, RF-12, RF-13 y RF-16: importar, revisar y activar un nuevo módulo. */
 export function NewModulePage() {
@@ -41,6 +44,7 @@ export function NewModulePage() {
   const existingScheduled = useModules().data?.find((m) => m.status === 'SCHEDULED')
   const scheduling = mode === 'schedule'
   const scheduledIso = scheduling && scheduledAt ? new Date(scheduledAt).toISOString() : undefined
+  const [acceptOverlap, setAcceptOverlap] = useState(false)
   const previewImport = usePreviewImport()
   const validateDraft = useValidateDraft()
   const activate = useActivateModule()
@@ -130,6 +134,21 @@ export function NewModulePage() {
     )
   }
 
+  // Choques de fechas entre el módulo activo y el nuevo, en el momento en que se activaría.
+  const activeSessions = useClassSessions().data ?? []
+  const activation = scheduling ? scheduledAt : toLocalInput(new Date())
+  const conflicts =
+    active.data && activation
+      ? scheduleConflicts(
+          activation,
+          activeSessions.filter((s) => s.status === 'SCHEDULED').map((s) => ({ date: s.classDate, startTime: s.startTime })),
+          (draft?.sessions ?? [])
+            .filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s.date))
+            .map((s) => ({ date: s.date, startTime: s.startTime || '00:00' })),
+        )
+      : null
+  const hasOverlap = !!conflicts && (!!conflicts.activeRemaining || !!conflicts.newBefore)
+
   const errorCount = errors.students.length + errors.sessions.length
   const canActivate =
     !!draft &&
@@ -212,6 +231,14 @@ export function NewModulePage() {
                   />
                 </Field>
               ))}
+            {scheduling && scheduledAt && conflicts && (
+              <ScheduleConflictNotice
+                conflicts={conflicts}
+                activeName={active.data?.name ?? null}
+                newName={name.trim()}
+                onUseSuggestion={setScheduledAt}
+              />
+            )}
             <Button className="w-full" variant="secondary" disabled={!files} loading={previewImport.isPending} onClick={validate}>
               Validar y ver vista previa
             </Button>
@@ -227,7 +254,10 @@ export function NewModulePage() {
                 <Button
                   icon={scheduling ? <CalendarClock className="size-4" /> : <Rocket className="size-4" />}
                   disabled={!canActivate}
-                  onClick={() => setConfirming(true)}
+                  onClick={() => {
+                    setAcceptOverlap(false)
+                    setConfirming(true)
+                  }}
                 >
                   {scheduling ? 'Programar módulo' : 'Activar módulo'}
                 </Button>
@@ -268,7 +298,7 @@ export function NewModulePage() {
             <Button variant="secondary" onClick={() => setConfirming(false)} disabled={activate.isPending}>
               Cancelar
             </Button>
-            <Button onClick={confirmActivation} loading={activate.isPending}>
+            <Button onClick={confirmActivation} loading={activate.isPending} disabled={hasOverlap && !acceptOverlap}>
               {scheduling ? 'Sí, programar' : 'Sí, activar'}
             </Button>
           </>
@@ -279,25 +309,48 @@ export function NewModulePage() {
             <div className="flex gap-3 rounded-xl bg-info-soft p-4 text-info-ink">
               <AlarmClock className="size-5 shrink-0" />
               <p>
-                Se activará automáticamente el <strong>{formatScheduled(scheduledIso)}</strong>. Hasta entonces todo sigue
-                igual y puedes cambiar la fecha, activarlo antes o cancelarlo desde Módulos.
+                <strong>{name.trim()}</strong> se activará automáticamente el <strong>{formatScheduled(scheduledIso)}</strong>.
+                Hasta entonces puedes cambiar la fecha, activarlo antes o cancelarlo desde Módulos.
               </p>
             </div>
           )}
-          <div className="flex gap-3 rounded-xl bg-alert-soft p-4 text-alert-ink">
-            <ShieldAlert className="size-5 shrink-0" />
-            <p>
-              {active.data ? (
-                <>
-                  {scheduling ? 'En ese momento, el' : 'El'} módulo <strong>{active.data.name}</strong> dejará de estar
-                  activo. Sus estudiantes ya no podrán ingresar, pero toda su información se conservará y podrás verla en{' '}
+          {active.data ? (
+            scheduling ? (
+              <div className="flex gap-3 rounded-xl bg-teal-soft p-4 text-teal-ink">
+                <ShieldCheck className="size-5 shrink-0" />
+                <p>
+                  El módulo actual <strong>{active.data.name}</strong> <strong>no se borra ni se elimina</strong>. Sigue
+                  funcionando con normalidad hasta esa fecha y hora; después pasa a <strong>Finalizado</strong> y podrás
+                  consultar todos sus datos (estudiantes, asistencias y reportes) en <strong>Módulos</strong>.
+                </p>
+              </div>
+            ) : (
+              <div className="flex gap-3 rounded-xl bg-warning-soft p-4 text-warning-ink">
+                <ShieldAlert className="size-5 shrink-0" />
+                <p>
+                  El módulo <strong>{active.data.name}</strong> pasará a <strong>Finalizado</strong> ahora: sus estudiantes ya no
+                  podrán ingresar. <strong>No se borra nada</strong>: todos sus datos quedan guardados y podrás consultarlos en{' '}
                   <strong>Módulos</strong>.
-                </>
-              ) : (
-                'Este será el primer módulo activo del sistema.'
-              )}
-            </p>
-          </div>
+                </p>
+              </div>
+            )
+          ) : (
+            <p className="rounded-xl bg-canvas p-4">Este será el primer módulo activo del sistema.</p>
+          )}
+          {conflicts && hasOverlap && (
+            <>
+              <ScheduleConflictNotice conflicts={conflicts} activeName={active.data?.name ?? null} newName={name.trim()} />
+              <label className="flex items-start gap-2 font-medium">
+                <input
+                  type="checkbox"
+                  checked={acceptOverlap}
+                  onChange={(e) => setAcceptOverlap(e.target.checked)}
+                  className="mt-0.5 size-4 accent-brand"
+                />
+                Entiendo que las fechas se superponen y quiero {scheduling ? 'programarlo' : 'activarlo'} igual.
+              </label>
+            </>
+          )}
           <p>
             {scheduling ? 'Se programará' : 'Se activará'} <strong>{name.trim()}</strong> con <strong>{draft?.students.length}</strong>{' '}
             estudiantes y <strong>{draft?.sessions.length}</strong> fechas de clase, sin registros de asistencia.

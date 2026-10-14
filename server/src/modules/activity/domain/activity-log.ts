@@ -17,7 +17,13 @@ export type ActivityAction =
   | 'REACTIVATE_STUDENT'
   | 'SUBMIT_JUSTIFICATION'
   | 'APPROVE_JUSTIFICATION'
-  | 'REJECT_JUSTIFICATION';
+  | 'REJECT_JUSTIFICATION'
+  | 'CHANGE_PASSWORD'
+  | 'CANCEL_SESSION'
+  | 'RESTORE_SESSION'
+  | 'RESCHEDULE_SESSION'
+  | 'ADD_SESSION'
+  | 'SET_CLASS_CODE';
 
 export interface ActivityLog {
   id: number;

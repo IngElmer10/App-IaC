@@ -55,10 +55,10 @@ export class TypeormAcademicModuleRepository extends AcademicModuleRepository {
       SELECT m.id,
              trim(concat_ws(' ', a.title, a.full_name)) AS teacher_name,
              (SELECT COUNT(*) FROM students s WHERE s.module_id = m.id)::int AS students,
-             (SELECT COUNT(*) FROM class_sessions c WHERE c.module_id = m.id)::int AS sessions,
-             (SELECT MIN(c.class_date)::text FROM class_sessions c WHERE c.module_id = m.id) AS first_date,
-             (SELECT MAX(c.class_date)::text FROM class_sessions c WHERE c.module_id = m.id) AS last_date,
-             (SELECT COUNT(*) FROM class_sessions c WHERE c.module_id = m.id AND c.class_date < ref.until)::int AS held,
+             (SELECT COUNT(*) FROM class_sessions c WHERE c.module_id = m.id AND c.status = 'SCHEDULED')::int AS sessions,
+             (SELECT MIN(c.class_date)::text FROM class_sessions c WHERE c.module_id = m.id AND c.status = 'SCHEDULED') AS first_date,
+             (SELECT MAX(c.class_date)::text FROM class_sessions c WHERE c.module_id = m.id AND c.status = 'SCHEDULED') AS last_date,
+             (SELECT COUNT(*) FROM class_sessions c WHERE c.module_id = m.id AND c.status = 'SCHEDULED' AND c.class_date < ref.until)::int AS held,
              (SELECT COUNT(*) FROM attendances t JOIN class_sessions c ON c.id = t.session_id
                WHERE t.module_id = m.id AND c.class_date < ref.until AND t.status IN ('PRESENTE', 'ATRASO'))::int AS attended,
              (SELECT COUNT(*) FROM attendances t JOIN class_sessions c ON c.id = t.session_id
@@ -109,6 +109,7 @@ export class TypeormAcademicModuleRepository extends AcademicModuleRepository {
         .addSelect('MIN(s.class_date)::text', 'first')
         .addSelect('MAX(s.class_date)::text', 'last')
         .where('s.module_id = :id', { id: module.id })
+        .andWhere("s.status = 'SCHEDULED'")
         .getRawOne<{ count: number; first: string | null; last: string | null }>(),
     ]);
     return {
@@ -244,6 +245,8 @@ function toDomain(row: AcademicModuleOrmEntity): AcademicModule {
       presentPoints: row.presentPoints,
       latePoints: row.latePoints,
       minAttendancePercentage: row.minAttendancePercentage,
+      justificationDays: row.justificationDays,
+      requireClassCode: row.requireClassCode,
     },
   };
 }
@@ -257,6 +260,8 @@ function toRuleColumns(rules: AttendanceRules) {
     presentPoints: rules.presentPoints,
     latePoints: rules.latePoints,
     minAttendancePercentage: rules.minAttendancePercentage,
+    justificationDays: rules.justificationDays,
+    requireClassCode: rules.requireClassCode,
   };
 }
 

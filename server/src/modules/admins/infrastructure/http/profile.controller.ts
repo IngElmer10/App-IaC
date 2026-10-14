@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Post,
   Put,
   StreamableFile,
@@ -13,13 +14,17 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { AuthUser } from '../../../../shared/domain/auth-user';
 import { CurrentUser, Roles } from '../../../../shared/infrastructure/security/decorators';
 import { AdminProfileService, MAX_PHOTO_BYTES } from '../../application/admin-profile.use-cases';
-import { UpdateProfileDto } from './profile.dto';
+import { ChangePasswordDto, UpdateProfileDto } from './profile.dto';
+import { ChangePasswordUseCase } from '../../application/change-password.use-case';
 
 /** Perfil del docente (el administrador que ingresó). */
 @Controller('profile')
 @Roles('ADMIN')
 export class ProfileController {
-  constructor(private readonly profiles: AdminProfileService) {}
+  constructor(
+    private readonly profiles: AdminProfileService,
+    private readonly changePassword: ChangePasswordUseCase,
+  ) {}
 
   @Get()
   get(@CurrentUser() admin: AuthUser) {
@@ -35,6 +40,12 @@ export class ProfileController {
       specialty: body.specialty ?? null,
       bio: body.bio ?? null,
     });
+  }
+
+  @Put('password')
+  @HttpCode(204)
+  async password(@CurrentUser() admin: AuthUser, @Body() body: ChangePasswordDto) {
+    await this.changePassword.execute(admin, body.currentPassword, body.newPassword);
   }
 
   @Get('photo')
