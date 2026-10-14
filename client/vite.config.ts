@@ -7,7 +7,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:3000',
+      // ws: también redirige la conexión en tiempo real (/api/socket.io).
+      '/api': { target: 'http://localhost:3000', ws: true },
     },
   },
 })

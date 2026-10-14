@@ -23,8 +23,9 @@ export function useProfilePhotoUrl(): string | null {
     queryFn: async () => toDataUrl(await profile.getPhoto()),
     enabled: current?.hasPhoto === true,
     staleTime: Infinity,
-    // Las imágenes no cambian: no se vuelven a descargar periódicamente.
+    // Las imágenes no cambian: no se vuelven a descargar periódicamente ni con cada aviso en tiempo real.
     refetchInterval: false,
+    meta: { image: true },
   })
   return current?.hasPhoto ? (url ?? null) : null
 }
@@ -43,8 +44,9 @@ export function useTeacherPhotoUrl(moduleId?: number): string | null {
     queryFn: async () => toDataUrl(await profile.getTeacherPhoto(moduleId)),
     enabled: teacher?.hasPhoto === true,
     staleTime: Infinity,
-    // Las imágenes no cambian: no se vuelven a descargar periódicamente.
+    // Las imágenes no cambian: no se vuelven a descargar periódicamente ni con cada aviso en tiempo real.
     refetchInterval: false,
+    meta: { image: true },
   })
   return teacher?.hasPhoto ? (url ?? null) : null
 }

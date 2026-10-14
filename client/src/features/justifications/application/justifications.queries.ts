@@ -80,7 +80,8 @@ export function useJustificationImage(id: number, fileId: number) {
       })
     },
     staleTime: Infinity,
-    // Las imágenes no cambian: no se vuelven a descargar periódicamente.
+    // Las imágenes no cambian: no se vuelven a descargar periódicamente ni con cada aviso en tiempo real.
     refetchInterval: false,
+    meta: { image: true },
   })
 }

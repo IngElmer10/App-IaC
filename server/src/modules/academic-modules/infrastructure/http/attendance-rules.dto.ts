@@ -41,4 +41,7 @@ export class AttendanceRulesDto {
 
   @IsBoolean()
   requireClassCode: boolean;
+
+  @IsBoolean()
+  classHoursOnly: boolean;
 }

@@ -40,10 +40,14 @@ export function AttendanceRulesInfo({
         ) : (
           <>
             <Rule icon={<CheckCircle2 className="size-4" />} tone="bg-brand-soft text-brand-ink" title={`Presente · ${pts(rules.presentPoints)}`}>
-              Marca a cualquier hora del día de clase.
+              {rules.classHoursOnly
+                ? `Marca durante el horario de la clase, desde su hora de inicio hasta su hora de fin${sampleClass ? ` (de ${sampleClass.startTime} a ${sampleClass.endTime})` : ''}.`
+                : 'Marca a cualquier hora del día de clase.'}
             </Rule>
             <Rule icon={<XCircle className="size-4" />} tone="bg-alert-soft text-alert-ink" title="Falta · 0 puntos">
-              Si no marcas hasta el final del día de clase.
+              {rules.classHoursOnly
+                ? 'Si no marcas antes de que termine la clase; después ya no podrás marcar.'
+                : 'Si no marcas hasta el final del día de clase.'}
             </Rule>
           </>
         )}

@@ -19,12 +19,19 @@ export const toMinutes = (time: string) => {
 const fromMinutes = (minutes: number) =>
   `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 
-/** Sin reglas no hay ventana: se marca durante todo el día (RF-12). Nada se extiende más allá del fin de la clase. */
+/**
+ * Sin puntualidad no hay ventana: se marca durante todo el día (RF-12), salvo que el módulo pida
+ * marcar solo en el horario de la clase; entonces se acepta de la hora de inicio a la de fin, siempre
+ * como Presente. Con puntualidad, nada se extiende más allá del fin de la clase.
+ */
 export function markWindowFor(
   rules: AttendanceRules,
   session: { startTime: string; endTime: string },
 ): MarkWindow | null {
-  if (!rules.enabled) return null;
+  if (!rules.enabled) {
+    if (!rules.classHoursOnly) return null;
+    return { opensAt: session.startTime.slice(0, 5), onTimeUntil: session.endTime.slice(0, 5), lateUntil: session.endTime.slice(0, 5) };
+  }
   const start = toMinutes(session.startTime);
   const end = toMinutes(session.endTime);
   const lateUntil = Math.min(start + rules.lateLimitMinutes, end);

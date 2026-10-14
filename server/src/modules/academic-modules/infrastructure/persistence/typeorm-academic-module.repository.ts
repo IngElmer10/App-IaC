@@ -247,6 +247,7 @@ function toDomain(row: AcademicModuleOrmEntity): AcademicModule {
       minAttendancePercentage: row.minAttendancePercentage,
       justificationDays: row.justificationDays,
       requireClassCode: row.requireClassCode,
+      classHoursOnly: row.classHoursOnly,
     },
   };
 }
@@ -262,6 +263,7 @@ function toRuleColumns(rules: AttendanceRules) {
     minAttendancePercentage: rules.minAttendancePercentage,
     justificationDays: rules.justificationDays,
     requireClassCode: rules.requireClassCode,
+    classHoursOnly: rules.classHoursOnly,
   };
 }
 

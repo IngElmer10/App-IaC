@@ -91,6 +91,8 @@ export interface MyAttendance {
   countdown: MarkCountdown | null
   todayRecord: AttendanceRecord | null
   canMarkToday: boolean
+  /** Si el docente ya publicó el código de la clase de hoy (el código en sí nunca llega al estudiante). */
+  todayCodePublished: boolean
   records: AttendanceRecord[]
   summary: AttendanceSummary
 }

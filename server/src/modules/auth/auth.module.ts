@@ -14,6 +14,7 @@ import { TokenService } from './application/token-service.port';
 import { AuthController } from './infrastructure/http/auth.controller';
 import { JwtAuthGuard } from './infrastructure/security/jwt-auth.guard';
 import { JwtTokenService } from './infrastructure/security/jwt-token.service';
+import { RealtimeGateway } from './infrastructure/realtime/realtime.gateway';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { JwtTokenService } from './infrastructure/security/jwt-token.service';
     LoginStudentUseCase,
     GetSessionUseCase,
     LogoutUseCase,
+    RealtimeGateway,
   ],
 })
 export class AuthModule {}

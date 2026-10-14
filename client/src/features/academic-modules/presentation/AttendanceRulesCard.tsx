@@ -30,7 +30,7 @@ export function AttendanceRulesCard({
   const invalidPoints = draft.latePoints > draft.presentPoints || draft.presentPoints < 1
   const invalid = invalidTimes || invalidPoints
 
-  const setNumber = (key: Exclude<keyof AttendanceRules, 'enabled' | 'requireClassCode'>) => (value: string) =>
+  const setNumber = (key: Exclude<keyof AttendanceRules, 'enabled' | 'requireClassCode' | 'classHoursOnly'>) => (value: string) =>
     setDraft((current) => ({ ...current, [key]: Math.max(0, Math.floor(Number(value) || 0)) }))
 
   const save = () =>
@@ -54,28 +54,50 @@ export function AttendanceRulesCard({
               Define cuándo una marca cuenta como Presente, Atraso o Falta según la hora de inicio de cada clase.
             </p>
           </div>
-          <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold">
-            {draft.enabled ? 'Activadas' : 'Desactivadas'}
-            <input
-              type="checkbox"
-              role="switch"
-              checked={draft.enabled}
-              onChange={(e) => setDraft((current) => ({ ...current, enabled: e.target.checked }))}
-              className="peer sr-only"
-            />
-            <span
-              aria-hidden
-              className="relative h-6 w-11 rounded-full bg-line transition peer-checked:bg-brand peer-focus-visible:ring-4 peer-focus-visible:ring-brand/20 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5"
-            />
-          </label>
+          <Switch
+            checked={draft.enabled}
+            label={draft.enabled ? 'Activadas' : 'Desactivadas'}
+            onChange={(checked) => setDraft((current) => ({ ...current, enabled: checked }))}
+          />
         </div>
 
         {!draft.enabled && (
-          <p className="rounded-xl bg-canvas px-4 py-3 text-sm text-muted">
-            Sin reglas, el estudiante puede marcar a cualquier hora del día de clase y siempre queda como{' '}
-            <strong className="text-ink">Presente</strong>; si no marca, queda como <strong className="text-ink">Falta</strong> al
-            terminar el día.
-          </p>
+          <div className="space-y-3 rounded-xl bg-canvas px-4 py-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="max-w-xl">
+                <p className="text-sm font-bold">Marcar solo durante el horario de la clase</p>
+                <p className="text-sm text-muted">
+                  Cada clase usa su propio horario del Excel: se puede marcar desde su hora de inicio hasta su hora de fin.
+                </p>
+              </div>
+              <Switch
+                checked={draft.classHoursOnly}
+                label={draft.classHoursOnly ? 'Activado' : 'Desactivado'}
+                onChange={(checked) => setDraft((current) => ({ ...current, classHoursOnly: checked }))}
+              />
+            </div>
+            <p className="text-sm text-muted">
+              {draft.classHoursOnly ? (
+                <>
+                  El estudiante marca entre la hora de inicio y la de fin de cada clase
+                  {sampleClass && (
+                    <>
+                      {' '}(por ejemplo, de <strong className="text-ink">{sampleClass.startTime}</strong> a{' '}
+                      <strong className="text-ink">{sampleClass.endTime}</strong>)
+                    </>
+                  )}{' '}
+                  y queda como <strong className="text-ink">Presente</strong>. Antes no puede marcar todavía; después, queda como{' '}
+                  <strong className="text-ink">Falta</strong>.
+                </>
+              ) : (
+                <>
+                  El estudiante puede marcar a cualquier hora del día de clase y siempre queda como{' '}
+                  <strong className="text-ink">Presente</strong>; si no marca, queda como <strong className="text-ink">Falta</strong>{' '}
+                  al terminar el día (así lo pide el documento de requerimientos, RF-12).
+                </>
+              )}
+            </p>
+          </div>
         )}
 
         <div className={cn('grid gap-4 sm:grid-cols-3', !draft.enabled && 'pointer-events-none opacity-50')}>
@@ -158,20 +180,11 @@ export function AttendanceRulesCard({
               Presente, Atraso y Falta según la hora.
             </p>
           </div>
-          <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold">
-            {draft.requireClassCode ? 'Activado' : 'Desactivado'}
-            <input
-              type="checkbox"
-              role="switch"
-              checked={draft.requireClassCode}
-              onChange={(e) => setDraft((current) => ({ ...current, requireClassCode: e.target.checked }))}
-              className="peer sr-only"
-            />
-            <span
-              aria-hidden
-              className="relative h-6 w-11 rounded-full bg-line transition peer-checked:bg-brand peer-focus-visible:ring-4 peer-focus-visible:ring-brand/20 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5"
-            />
-          </label>
+          <Switch
+            checked={draft.requireClassCode}
+            label={draft.requireClassCode ? 'Activado' : 'Desactivado'}
+            onChange={(checked) => setDraft((current) => ({ ...current, requireClassCode: checked }))}
+          />
         </div>
         {draft.requireClassCode &&
           (rules.requireClassCode ? (
@@ -189,6 +202,19 @@ export function AttendanceRulesCard({
         </div>
       </div>
     </Card>
+  )
+}
+
+function Switch({ checked, label, onChange }: { checked: boolean; label: string; onChange: (checked: boolean) => void }) {
+  return (
+    <label className="flex shrink-0 cursor-pointer items-center gap-3 text-sm font-semibold">
+      {label}
+      <input type="checkbox" role="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
+      <span
+        aria-hidden
+        className="relative h-6 w-11 rounded-full bg-line transition peer-checked:bg-brand peer-focus-visible:ring-4 peer-focus-visible:ring-brand/20 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5"
+      />
+    </label>
   )
 }
 

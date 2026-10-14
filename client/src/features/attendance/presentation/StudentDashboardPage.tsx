@@ -1,23 +1,22 @@
-import { AlarmClock, CalendarDays, CalendarPlus, CalendarSync, CheckCircle2, FileCheck2, Fingerprint, ShieldCheck } from 'lucide-react'
+import { AlarmClock, CalendarDays, CalendarPlus, CalendarSync, CheckCircle2, FileCheck2, ShieldCheck } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { cn } from '../../../shared/lib/cn'
 import { getErrorMessage } from '../../../core/http/api-error'
 import { formatLongDate, formatShortDate, formatTime } from '../../../shared/lib/format'
-import { Button } from '../../../shared/ui/Button'
 import { Card, CardHeader } from '../../../shared/ui/Card'
 import { EmptyState } from '../../../shared/ui/EmptyState'
 import { PageLoader } from '../../../shared/ui/Spinner'
-import { useToast } from '../../../shared/ui/toast'
 import { useSessionChanges } from '../../class-sessions/application/sessions.queries'
 import { ChangePhotos } from '../../class-sessions/presentation/ChangePhotos'
 import { useMyJustifications } from '../../justifications/application/justifications.queries'
 import { canJustify } from '../../justifications/domain/justification'
 import { JustificationNote } from '../../justifications/presentation/JustificationNote'
 import { JustifyDialog } from '../../justifications/presentation/JustifyDialog'
-import { useMarkAttendance, useMyAttendance } from '../application/attendance.queries'
+import { useMyAttendance } from '../application/attendance.queries'
 import { isAttended, type AttendanceRecord, type MyAttendance } from '../domain/attendance'
 import { AttendanceHistoryTable } from './AttendanceHistoryTable'
 import { AttendanceStats, RiskBanner } from './AttendanceStats'
+import { MarkAttendanceControl } from './MarkAttendanceControl'
 import { MarkCountdownNotice } from './MarkCountdownNotice'
 
 export function StudentDashboardPage() {
@@ -74,6 +73,7 @@ export function StudentDashboardPage() {
             const moved = changes.data?.find((c) => c.sessionId === record.sessionId && (c.action === 'RESCHEDULE' || c.action === 'ADD'))
             return (
               <div className="space-y-1.5">
+                {record.date === data.today && record.status === 'PENDIENTE' && <MarkAttendanceControl data={data} compact />}
                 {moved && (
                   <div className="space-y-1">
                     <span
@@ -106,25 +106,10 @@ export function StudentDashboardPage() {
 }
 
 function TodayCard({ data, fetchedAt }: { data: MyAttendance; fetchedAt: number }) {
-  const mark = useMarkAttendance()
-  const toast = useToast()
   const record = data.todayRecord
   const nextClass = data.records.find((r) => r.date > data.today)
 
   const markWindow = data.markWindow
-  const needsCode = data.rules.requireClassCode && data.canMarkToday
-  const [code, setCode] = useState('')
-
-  const onMark = () =>
-    mark.mutate(needsCode ? code.trim() : undefined, {
-      onSuccess: (result) =>
-        toast.success(
-          result.status === 'ATRASO'
-            ? `Asistencia registrada con atraso a las ${formatTime(result.markedAt!)}`
-            : `¡Listo! Asistencia registrada a las ${formatTime(result.markedAt!)}`,
-        ),
-      onError: (err) => toast.error(getErrorMessage(err)),
-    })
 
   return (
     <Card className="relative overflow-hidden">
@@ -139,7 +124,13 @@ function TodayCard({ data, fetchedAt }: { data: MyAttendance; fetchedAt: number 
               <p className="mt-1 text-muted">
                 Clase de {record.startTime} a {record.endTime}
               </p>
-              {markWindow && record.status === 'PENDIENTE' && (
+              {markWindow && record.status === 'PENDIENTE' && !data.rules.enabled && (
+                <p className="mt-3 max-w-md text-sm text-muted">
+                  Marca durante la clase, entre las <strong className="text-ink">{markWindow.opensAt}</strong> y las{' '}
+                  <strong className="text-ink">{markWindow.lateUntil}</strong>, para quedar como Presente. Después, Falta.
+                </p>
+              )}
+              {markWindow && record.status === 'PENDIENTE' && data.rules.enabled && (
                 <p className="mt-3 max-w-md text-sm text-muted">
                   Marca entre <strong className="text-ink">{markWindow.opensAt}</strong> y{' '}
                   <strong className="text-ink">{markWindow.onTimeUntil}</strong> para quedar como Presente. Hasta las{' '}
@@ -182,36 +173,9 @@ function TodayCard({ data, fetchedAt }: { data: MyAttendance; fetchedAt: number 
                   : `El tiempo para marcar terminó a las ${markWindow?.lateUntil}`
               }
             />
-          ) : (
-            <div className="flex flex-col gap-2 md:items-end">
-              {needsCode && (
-                <label className="block w-full md:w-56">
-                  <span className="mb-1 block text-sm font-semibold md:text-right">Código de la clase</span>
-                  <input
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                    maxLength={8}
-                    inputMode="text"
-                    autoComplete="off"
-                    placeholder="Ej.: 482113"
-                    className="h-12 w-full rounded-xl border border-line bg-surface px-3 text-center text-lg font-bold tracking-[0.3em] focus:border-brand focus:ring-4 focus:ring-brand/15 focus:outline-none"
-                  />
-                </label>
-              )}
-              <Button
-                size="lg"
-                onClick={onMark}
-                loading={mark.isPending}
-                disabled={!data.canMarkToday || (needsCode && code.trim().length < 4)}
-                icon={<Fingerprint className="size-5" />}
-                className="w-full md:w-auto"
-                title={data.canMarkToday ? undefined : 'Solo puedes marcar en una fecha de clase'}
-              >
-                {record && markWindow && !data.canMarkToday ? `Se habilita a las ${markWindow.opensAt}` : 'Marcar asistencia'}
-              </Button>
-              {needsCode && <p className="text-xs text-muted md:text-right">Escribe el código que da tu docente en la clase.</p>}
-            </div>
-          )}
+          ) : record ? (
+            <MarkAttendanceControl data={data} />
+          ) : null}
         </div>
       </div>
     </Card>

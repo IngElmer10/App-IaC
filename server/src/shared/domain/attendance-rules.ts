@@ -26,6 +26,11 @@ export interface AttendanceRules {
   justificationDays: number;
   /** El estudiante debe escribir el código de la clase que da el docente para poder marcar. */
   requireClassCode: boolean;
+  /**
+   * Sin puntualidad: la marca solo se acepta entre la hora de inicio y la de fin de cada clase
+   * (siempre como Presente), en vez de todo el día. Extensión opcional de RF-12, apagada por defecto.
+   */
+  classHoursOnly: boolean;
 }
 
 export const DEFAULT_ATTENDANCE_RULES: AttendanceRules = {
@@ -38,6 +43,7 @@ export const DEFAULT_ATTENDANCE_RULES: AttendanceRules = {
   minAttendancePercentage: 80,
   justificationDays: 3,
   requireClassCode: false,
+  classHoursOnly: false,
 };
 
 export function ensureValidRules(rules: AttendanceRules): void {

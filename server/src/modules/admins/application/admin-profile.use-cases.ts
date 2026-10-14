@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { RealtimeEvents } from '../../../shared/application/realtime.port';
 import { BusinessRuleError, NotFoundError } from '../../../shared/domain/errors';
 import type { AdminProfile, AdminProfileChanges } from '../domain/admin-profile';
 import { AdminRepository } from '../domain/admin.repository';
@@ -9,7 +10,10 @@ export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 /** Perfil del administrador, que figura como docente del módulo. */
 @Injectable()
 export class AdminProfileService {
-  constructor(private readonly admins: AdminRepository) {}
+  constructor(
+    private readonly admins: AdminRepository,
+    private readonly realtime: RealtimeEvents,
+  ) {}
 
   async get(adminId: number): Promise<AdminProfile> {
     const profile = await this.admins.findProfile(adminId);
@@ -28,6 +32,8 @@ export class AdminProfileService {
       specialty: clean(changes.specialty),
       bio: clean(changes.bio),
     });
+    // El docente aparece en el calendario y el panel de los estudiantes.
+    this.realtime.toEveryone({ action: 'UPDATE_PROFILE' });
     return this.get(adminId);
   }
 
@@ -46,11 +52,13 @@ export class AdminProfileService {
       throw new BusinessRuleError('La foto no puede pesar más de 2 MB');
     }
     await this.admins.setPhoto(adminId, { data: file.buffer, mimeType: file.mimetype });
+    this.realtime.toEveryone({ action: 'UPDATE_PROFILE_PHOTO', images: true });
     return this.get(adminId);
   }
 
   async removePhoto(adminId: number): Promise<AdminProfile> {
     await this.admins.setPhoto(adminId, null);
+    this.realtime.toEveryone({ action: 'UPDATE_PROFILE_PHOTO', images: true });
     return this.get(adminId);
   }
 }

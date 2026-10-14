@@ -30,13 +30,24 @@ export class UpdateAttendanceRulesUseCase {
       description: `${
         rules.enabled
           ? `Puntualidad activada (abre ${rules.openBeforeMinutes} min antes, tolerancia ${rules.toleranceMinutes} min, atraso hasta ${rules.lateLimitMinutes} min)`
-          : 'Puntualidad desactivada (se marca todo el día)'
+          : rules.classHoursOnly
+            ? 'Puntualidad desactivada (se marca solo durante el horario de la clase)'
+            : 'Puntualidad desactivada (se marca todo el día)'
       } · Presente ${rules.presentPoints} pts, Atraso ${rules.latePoints} pts, mínimo ${rules.minAttendancePercentage}% · ${
         rules.justificationDays ? `justificaciones hasta ${rules.justificationDays} días después` : 'sin justificaciones de estudiantes'
       }${rules.requireClassCode ? ' · exige código de clase' : ''}`,
       details: { previous: module.rules, next: rules },
     });
 
+    if (!rules.enabled && rules.classHoursOnly && !(module.rules.classHoursOnly && !module.rules.enabled)) {
+      await this.notifier.toStudents({
+        moduleId: module.id,
+        type: 'CLASS_HOURS_ONLY_ENABLED',
+        title: 'Ahora solo puedes marcar durante el horario de la clase',
+        body: 'Tu docente cambió la regla: la asistencia se marca entre la hora de inicio y la de fin de cada clase. Fuera de ese horario ya no se puede marcar.',
+        link: '/estudiante',
+      });
+    }
     if (rules.requireClassCode && !module.rules.requireClassCode) {
       await this.notifier.toStudents({
         moduleId: module.id,

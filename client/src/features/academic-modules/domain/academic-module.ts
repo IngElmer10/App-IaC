@@ -14,6 +14,8 @@ export interface AttendanceRules {
   justificationDays: number
   /** El estudiante debe escribir el código de la clase para marcar. */
   requireClassCode: boolean
+  /** Sin puntualidad: marcar solo entre la hora de inicio y la de fin de cada clase (no todo el día). */
+  classHoursOnly: boolean
 }
 
 /** ACTIVE: en uso. SCHEDULED: se activará en `scheduledFor`. CLOSED: finalizado (solo lectura). */

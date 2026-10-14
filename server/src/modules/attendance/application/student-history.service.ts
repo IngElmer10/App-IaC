@@ -51,6 +51,8 @@ export class StudentHistoryService {
       countdown: pending ? markCountdown(markWindow, this.clock.secondsSinceMidnight()) : null,
       todayRecord,
       canMarkToday: pending && moment !== 'TOO_EARLY',
+      /** Si el docente ya publicó el código de la clase de hoy (nunca se envía el código). */
+      todayCodePublished: Boolean(todaySession?.classCode),
       records,
       summary: summarize(
         records.map((r) => r.status),

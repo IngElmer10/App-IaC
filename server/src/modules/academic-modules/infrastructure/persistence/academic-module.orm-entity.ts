@@ -57,4 +57,7 @@ export class AcademicModuleOrmEntity {
 
   @Column({ name: 'require_class_code', type: 'boolean', default: false })
   requireClassCode: boolean;
+
+  @Column({ name: 'class_hours_only', type: 'boolean', default: false })
+  classHoursOnly: boolean;
 }

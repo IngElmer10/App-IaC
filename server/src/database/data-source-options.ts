@@ -27,6 +27,7 @@ import { Justifications1760900000000 } from './migrations/1760900000000-justific
 import { JustificationDays1761000000000 } from './migrations/1761000000000-justification-days';
 import { ClassChangesAndCode1761100000000 } from './migrations/1761100000000-class-changes-and-code';
 import { Notifications1761200000000 } from './migrations/1761200000000-notifications';
+import { ClassHoursOnly1761300000000 } from './migrations/1761300000000-class-hours-only';
 
 export const ORM_ENTITIES = [
   AdminOrmEntity,
@@ -65,6 +66,7 @@ export function buildDataSourceOptions(
       JustificationDays1761000000000,
       ClassChangesAndCode1761100000000,
       Notifications1761200000000,
+      ClassHoursOnly1761300000000,
     ],
     synchronize: false,
   };

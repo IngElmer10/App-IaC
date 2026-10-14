@@ -202,3 +202,38 @@ describe('clases canceladas', () => {
     expect(summary.percentage).toBe(50);
   });
 });
+
+describe('marcar solo durante el horario de la clase (sin puntualidad)', () => {
+  const HOURS_ONLY = { ...DEFAULT_ATTENDANCE_RULES, classHoursOnly: true };
+
+  it('la ventana va de la hora de inicio a la de fin de cada clase', () => {
+    expect(markWindowFor(HOURS_ONLY, CLASS)).toEqual({ opensAt: '19:00', onTimeUntil: '22:00', lateUntil: '22:00' });
+    expect(markWindowFor(HOURS_ONLY, { startTime: '08:30:00', endTime: '10:00:00' })).toEqual({
+      opensAt: '08:30',
+      onTimeUntil: '10:00',
+      lateUntil: '10:00',
+    });
+  });
+
+  it('dentro del horario siempre es Presente; antes o después se rechaza', () => {
+    const window = markWindowFor(HOURS_ONLY, CLASS);
+    expect(() => statusForStudentMark(window, '18:59')).toThrow(BusinessRuleError);
+    expect(statusForStudentMark(window, '19:00')).toBe('PRESENTE');
+    expect(statusForStudentMark(window, '21:30')).toBe('PRESENTE');
+    expect(statusForStudentMark(window, '22:00')).toBe('PRESENTE');
+    expect(() => statusForStudentMark(window, '22:01')).toThrow(BusinessRuleError);
+  });
+
+  it('la cuenta regresiva termina al final de la clase, no a la medianoche', () => {
+    const window = markWindowFor(HOURS_ONLY, CLASS);
+    expect(markCountdown(window, 18 * 3600 + 30 * 60)).toEqual({
+      opensInSeconds: 30 * 60,
+      onTimeEndsInSeconds: 3 * 3600 + 31 * 60,
+      closesInSeconds: 3 * 3600 + 31 * 60,
+    });
+  });
+
+  it('con puntualidad activada manda la puntualidad', () => {
+    expect(markWindowFor({ ...RULES, classHoursOnly: true }, CLASS)).toEqual(markWindowFor(RULES, CLASS));
+  });
+});

@@ -34,8 +34,8 @@ documento: las que lo contradicen, como el cálculo de atrasos, vienen **desacti
 
 | Capa | Tecnologías |
 |---|---|
-| Backend | NestJS 12, TypeORM, PostgreSQL, JWT, exceljs (lectura y exportación de Excel) |
-| Frontend | React 19, Vite, Tailwind CSS 4, TanStack Query (React Query), React Router, lucide-react, html-to-image |
+| Backend | NestJS 12, TypeORM, PostgreSQL, JWT, exceljs (lectura y exportación de Excel), Socket.IO (tiempo real) |
+| Frontend | React 19, Vite, Tailwind CSS 4, TanStack Query (React Query), React Router, socket.io-client, lucide-react, html-to-image |
 | Pruebas | Jest (backend), oxlint, ESLint, TypeScript estricto |
 
 El backend usa **arquitectura hexagonal por funcionalidad** y el frontend **Clean Architecture por
@@ -86,7 +86,8 @@ npm install
 npm run dev
 ```
 
-Vite redirige las peticiones a `/api` hacia el backend (`localhost:3000`). Para que otro
+Vite redirige las peticiones a `/api` hacia el backend (`localhost:3000`), incluida la conexión en
+tiempo real (`/api/socket.io`). Para que otro
 dispositivo de la misma red entre al sistema: `npm run dev -- --host` y abrir la IP de la
 computadora, por ejemplo `http://192.168.1.50:5173`.
 
@@ -275,7 +276,7 @@ El correo es el usuario de ingreso y no se cambia desde aquí.
 
 - **Búsqueda (Ctrl + K):** encuentra páginas y estudiantes por nombre o número de registro. Se navega
   con las flechas y se abre con Enter.
-- **Notificaciones** (se actualizan cada 30 segundos):
+- **Notificaciones** (llegan en tiempo real):
   - cada marca de asistencia del día, con el estado y la hora, y un contador de no leídas;
   - la clase de hoy y cuántos marcaron;
   - estudiantes que faltaron cuando se cierra el registro;
@@ -333,6 +334,7 @@ que el comportamiento por defecto siga cumpliendo el documento.
 | Funcionalidad | Relación con el documento | Cómo se respeta |
 |---|---|---|
 | Reglas de puntualidad (Presente, Atraso, Falta por horario) | RF-12 dice "sin atrasos ni tolerancias" y las exclusiones dicen "ni calcular atrasos" | Vienen **desactivadas**; desactivadas, se marca todo el día y siempre es Presente |
+| Marcar solo durante el horario de la clase | RF-12 dice que la marca se permite "durante todo el día de clase" | Viene **desactivada**; activada, cada clase se marca de su hora de inicio a su hora de fin, siempre como Presente |
 | Estados Atraso y Justificado | No existen en el documento | Solo se pueden usar con la puntualidad activada |
 | Puntos por sesión y asistencia mínima | No mencionados | Informativos; no cambian Presente ni Falta |
 | Historial de módulos anteriores | RF-15 y las exclusiones dejan fuera la consulta de módulos anteriores | Solo lectura; no permite reactivar ni editar |
@@ -370,6 +372,14 @@ que el comportamiento por defecto siga cumpliendo el documento.
 | Justificado | Asignado por el admin (solo con puntualidad); no cuenta a favor ni en contra |
 | Pendiente | Es hoy y todavía se puede marcar |
 | Programada | Fecha futura |
+
+### Marcar solo durante el horario de la clase (opcional)
+
+Se activa en Calendario → Reglas, con la puntualidad desactivada, y viene apagada. Cada clase usa su
+propio horario del Excel: con una clase de 18:00 a 21:00, antes de las 18:00 no se puede marcar, de
+18:00 a 21:00 (inclusive) la marca es Presente, y desde las 21:01 ya no se puede marcar y la clase
+queda como Falta. Apagada, se marca todo el día, como pide RF-12. Con la puntualidad activada, mandan
+sus propios tramos.
 
 ### Reglas de puntualidad (opcionales)
 
@@ -463,6 +473,15 @@ Decisiones importantes:
   arrancar el servidor; un servidor apagado en el momento programado activa el módulo apenas vuelve.
 - **La vista previa** devuelve todas las filas, también las inválidas, para poder corregirlas. La
   activación recibe los datos ya corregidos en JSON y el servidor los vuelve a validar.
+- **Tiempo real (WebSocket con Socket.IO):** corre en el mismo servidor y puerto, en `/api/socket.io`,
+  y valida el mismo token JWT. Cada acción que pasa por `ActivityRecorder` (y los cambios del perfil
+  del docente) envía un aviso `changed` que **no lleva datos**. El cliente (`RealtimeSync`) vuelve a
+  consultar a la API lo que tiene en pantalla, así nadie recibe información que la API no le daría.
+  Destinatarios: los administradores reciben todo. Una acción sobre un estudiante concreto le llega
+  solo a él, y los cambios generales (clases, reglas) a todo el módulo. Activar un módulo avisa a
+  todos, para cerrar la sesión de los estudiantes del anterior. Las imágenes solo se vuelven a
+  descargar cuando cambia la foto del docente. Si la conexión se cae, se reconecta sola y se
+  actualiza al volver; además se sigue consultando cada 30 segundos como respaldo.
 
 ### Frontend: Clean Architecture por funcionalidad
 
@@ -515,6 +534,7 @@ Migraciones (en `server/src/database/migrations/`), aplicadas automáticamente a
 | `1760600000000-attendance-scoring` | Puntos por estado y asistencia mínima |
 | `1760700000000-module-scheduling` | Estados de módulo y activación programada |
 | `1760800000000-student-editing-extra-fields` | Campos adicionales y baja de estudiantes |
+| `1761300000000-class-hours-only` | Regla opcional para marcar solo durante el horario de la clase |
 
 ---
 
