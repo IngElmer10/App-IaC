@@ -17,6 +17,8 @@ export interface UpdateAttendanceInput {
   sessionId: number;
   status: StoredAttendanceStatus;
   reason?: string;
+  /** Si ya tiene ese estado no es un error: no se cambia nada (al aprobar una justificación). */
+  allowSame?: boolean;
 }
 
 /** RF-07 / RN-06 / RN-07: el admin corrige cualquier fecha y el cambio queda auditado. */
@@ -48,6 +50,7 @@ export class UpdateAttendanceUseCase {
     const context = { today: this.clock.today(), time: this.clock.currentTime(), rules: module.rules };
     const existing = await this.attendances.findOne(student.id, session.id);
     const previousStatus = buildRecord(session, existing, context).status;
+    if (input.allowSame && previousStatus === input.status) return buildRecord(session, existing, context);
     ensureAdminChangeIsEffective(previousStatus, input.status);
 
     const reason = input.reason?.trim() || null;

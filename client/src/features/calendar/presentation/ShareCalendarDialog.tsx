@@ -9,9 +9,9 @@ import type { CalendarImage, CalendarImageSource } from '../application/use-cale
 const canCopyImages = () => typeof ClipboardItem !== 'undefined' && !!navigator.clipboard?.write
 
 /**
- * Compartir el calendario. Las páginas web no pueden adjuntar archivos a WhatsApp, Facebook
- * o al correo; por eso cada opción copia la imagen al portapapeles y abre el destino con el
- * texto listo para pegarla. En celulares, "Más opciones" abre el menú nativo, que sí adjunta la imagen.
+ * Compartir el calendario como imagen JPG. En celulares se usa el menú nativo, que adjunta la imagen
+ * directamente. En computadora las páginas web no pueden adjuntar archivos a WhatsApp, Facebook o al
+ * correo: se copia la imagen, se abre el destino y se indica pegarla con Ctrl+V.
  */
 export function ShareCalendarDialog({
   open,
@@ -34,7 +34,11 @@ export function ShareCalendarDialog({
 function ShareContent({ source, text }: { source: CalendarImageSource; text: string }) {
   const [image, setImage] = useState<CalendarImage | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string[] | null>(null)
+  // Por defecto solo va la imagen (que ya trae toda la información) con una leyenda corta.
+  const [includeText, setIncludeText] = useState(false)
+  const caption = text.split('\n')[0].replace(/\*/g, '')
+  const message = includeText ? text : caption
   // Se fija la fuente del primer render: el hook devuelve un objeto nuevo en cada render.
   const [initialSource] = useState(source)
 
@@ -65,16 +69,26 @@ function ShareContent({ source, text }: { source: CalendarImageSource; text: str
     link.click()
   }
 
-  /** Copia la imagen; si el navegador no lo permite, la descarga para adjuntarla a mano. */
-  const copyImage = async (destination: string) => {
+  const canShareFile = !!image && !!navigator.canShare?.({ files: [image.file] })
+
+  /** Menú nativo (celulares): la imagen se adjunta directamente en la app que se elija. */
+  const nativeShare = () =>
+    void navigator.share({ files: [image!.file], text: message, title: caption }).catch(() => undefined)
+
+  /** Copia la imagen y explica cómo pegarla; si el navegador no puede copiar, la descarga para adjuntarla. */
+  const copyImage = async (destination: string, steps: string[]) => {
     if (!image) return
     try {
       if (!canCopyImages()) throw new Error('sin soporte')
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': image.blob })])
-      setNotice(`Imagen copiada. En ${destination}, pégala con Ctrl+V (o mantén presionado y "Pegar" en el celular).`)
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': image.png })])
+      setNotice([`La imagen ya está copiada.`, ...steps, `Pega la imagen con Ctrl+V y envíala.`])
     } catch {
       download()
-      setNotice(`Tu navegador no permite copiar imágenes: se descargó el archivo para que lo adjuntes en ${destination}.`)
+      setNotice([
+        `Tu navegador no permite copiar imágenes: se descargó ${image.file.name}.`,
+        ...steps,
+        `Adjunta el archivo descargado (clip o "Adjuntar") en ${destination} y envíalo.`,
+      ])
     }
   }
 
@@ -85,17 +99,17 @@ function ShareContent({ source, text }: { source: CalendarImageSource; text: str
       label: 'Más opciones',
       icon: <Share2 className="size-5" />,
       className: 'bg-brand text-white',
-      hidden: !image || !navigator.canShare?.({ files: [image.file] }),
-      onClick: () =>
-        void navigator.share({ files: [image!.file], text, title: 'Calendario de clases' }).catch(() => undefined),
+      hidden: !canShareFile,
+      onClick: nativeShare,
     },
     {
       label: 'WhatsApp',
       icon: <WhatsAppIcon />,
       className: 'bg-[#25D366] text-white',
       onClick: () => {
-        void copyImage('WhatsApp')
-        openUrl(`https://wa.me/?text=${encodeURIComponent(text)}`)
+        if (canShareFile) return nativeShare()
+        void copyImage('WhatsApp', ['Se abrió WhatsApp: elige el chat o grupo.'])
+        openUrl(`https://wa.me/?text=${encodeURIComponent(message)}`)
       },
     },
     {
@@ -103,10 +117,9 @@ function ShareContent({ source, text }: { source: CalendarImageSource; text: str
       icon: <Mail className="size-5" />,
       className: 'bg-alert text-white',
       onClick: () => {
-        void copyImage('el correo')
-        window.location.assign(
-          `mailto:?subject=${encodeURIComponent('Calendario de clases del módulo')}&body=${encodeURIComponent(text)}`,
-        )
+        if (canShareFile) return nativeShare()
+        void copyImage('el correo', ['Se abrió tu programa de correo con el asunto listo.'])
+        window.location.assign(`mailto:?subject=${encodeURIComponent(caption)}&body=${encodeURIComponent(message)}`)
       },
     },
     {
@@ -114,7 +127,8 @@ function ShareContent({ source, text }: { source: CalendarImageSource; text: str
       icon: <FacebookIcon />,
       className: 'bg-[#1877F2] text-white',
       onClick: () => {
-        void copyImage('Facebook')
+        if (canShareFile) return nativeShare()
+        void copyImage('Facebook', ['Se abrió Facebook: crea una publicación o abre el chat.'])
         openUrl('https://www.facebook.com/')
       },
     },
@@ -122,7 +136,7 @@ function ShareContent({ source, text }: { source: CalendarImageSource; text: str
       label: 'Copiar imagen',
       icon: <Copy className="size-5" />,
       className: 'bg-canvas text-ink ring-1 ring-line',
-      onClick: () => void copyImage('donde quieras'),
+      onClick: () => void copyImage('el chat o documento', ['Abre el chat o documento donde quieras compartirla.']),
     },
     {
       label: 'Descargar',
@@ -136,7 +150,7 @@ function ShareContent({ source, text }: { source: CalendarImageSource; text: str
     <div className="space-y-5">
       <div className="grid min-h-40 place-items-center overflow-hidden rounded-xl border border-line bg-canvas">
         {image ? (
-          <img src={image.url} alt="Vista previa del calendario" className="max-h-72 w-full object-contain" />
+          <img src={image.url} alt="Vista previa del calendario (JPG)" className="max-h-72 w-full object-contain" />
         ) : error ? (
           <p className="p-6 text-center text-sm text-alert-ink">{error}</p>
         ) : (
@@ -171,15 +185,31 @@ function ShareContent({ source, text }: { source: CalendarImageSource; text: str
       </div>
 
       {notice && (
-        <p role="status" className="flex items-start gap-2 rounded-xl bg-teal-soft px-4 py-3 text-sm text-teal-ink">
-          <Check className="mt-0.5 size-4 shrink-0" /> {notice}
-        </p>
+        <div role="status" className="flex items-start gap-2 rounded-xl bg-teal-soft px-4 py-3 text-sm text-teal-ink">
+          <Check className="mt-0.5 size-4 shrink-0" />
+          <ol className="list-inside list-decimal space-y-0.5">
+            {notice.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+        </div>
       )}
 
-      <details className="rounded-xl border border-line px-4 py-3 text-sm">
-        <summary className="cursor-pointer font-semibold">Texto que se comparte</summary>
-        <pre className="mt-3 font-sans whitespace-pre-wrap text-muted">{text}</pre>
-      </details>
+      <div className="rounded-xl border border-line px-4 py-3 text-sm">
+        <label className="flex items-center gap-2 font-semibold">
+          <input
+            type="checkbox"
+            checked={includeText}
+            onChange={(e) => setIncludeText(e.target.checked)}
+            className="size-4 accent-brand"
+          />
+          Enviar también el texto con las fechas y el horario
+        </label>
+        <p className="mt-1 text-xs text-muted">
+          La imagen ya incluye toda la información. Si lo marcas, además se escribe el detalle como texto.
+        </p>
+        <pre className="mt-3 font-sans whitespace-pre-wrap text-muted">{message}</pre>
+      </div>
     </div>
   )
 }

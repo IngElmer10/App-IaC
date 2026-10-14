@@ -6,6 +6,8 @@ import { Button } from '../../../shared/ui/Button'
 import { Card, CardHeader } from '../../../shared/ui/Card'
 import { EmptyState } from '../../../shared/ui/EmptyState'
 import { PageLoader } from '../../../shared/ui/Spinner'
+import { useJustifications } from '../../justifications/application/justifications.queries'
+import { JustificationNote } from '../../justifications/presentation/JustificationNote'
 import { useStudentAttendance } from '../application/attendance.queries'
 import { AttendanceHistoryTable } from './AttendanceHistoryTable'
 import { AttendanceStats, RiskBanner } from './AttendanceStats'
@@ -20,6 +22,7 @@ export function StudentAttendancePage() {
   const moduleId = params.moduleId ? Number(params.moduleId) : undefined
   const { data, isLoading, error } = useStudentAttendance(studentId, moduleId)
   const readOnly = !!data && data.module.status !== 'ACTIVE'
+  const justifications = useJustifications({ studentId, moduleId }, Number.isInteger(studentId))
   const backTo = moduleId ? `/admin/modulos/${moduleId}?tab=estudiantes` : '/admin/asistencias'
   const [editing, setEditing] = useState<EditTarget | null>(null)
 
@@ -89,6 +92,12 @@ export function StudentAttendancePage() {
           records={data.records}
           today={data.today}
           onEdit={readOnly ? undefined : (record) => setEditing({ student, record })}
+          renderExtra={(record) => (
+            <JustificationNote
+              justification={justifications.data?.items.find((j) => j.sessionId === record.sessionId)}
+              adminLink={!readOnly}
+            />
+          )}
         />
       </Card>
 

@@ -4,8 +4,8 @@ export type EditableStatus = 'PRESENTE' | 'ATRASO' | 'FALTA' | 'JUSTIFICADO'
 export type AttendanceStatus = EditableStatus | 'PENDIENTE' | 'PROGRAMADA'
 export type AttendanceSource = 'STUDENT' | 'ADMIN'
 
-/** Estados disponibles sin reglas de puntualidad (RF-07) y con ellas. */
-export const BASIC_STATUSES: EditableStatus[] = ['PRESENTE', 'FALTA']
+/** Estados disponibles sin reglas de puntualidad (RF-07 más Justificado) y con ellas (además Atraso). */
+export const BASIC_STATUSES: EditableStatus[] = ['PRESENTE', 'FALTA', 'JUSTIFICADO']
 export const ALL_STATUSES: EditableStatus[] = ['PRESENTE', 'ATRASO', 'FALTA', 'JUSTIFICADO']
 
 /** Estados en los que el estudiante marcó (tienen hora de marca). */

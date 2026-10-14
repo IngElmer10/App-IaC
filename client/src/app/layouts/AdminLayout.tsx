@@ -3,6 +3,7 @@ import {
   CalendarDays,
   ChevronRight,
   ClipboardList,
+  FileClock,
   History,
   LayoutDashboard,
   Library,
@@ -18,6 +19,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { useActiveModule } from '../../features/academic-modules/application/academic-modules.queries'
 import { useAuth } from '../../features/auth/application/auth-context'
+import { useJustifications } from '../../features/justifications/application/justifications.queries'
 import { CommandPalette } from '../../features/dashboard/presentation/CommandPalette'
 import { NotificationsMenu } from '../../features/dashboard/presentation/NotificationsMenu'
 import { useProfile } from '../../features/profile/application/profile.queries'
@@ -42,6 +44,7 @@ const NAV = [
   { to: '/admin/asistencias', label: 'Asistencias', icon: ClipboardList },
   { to: '/admin/calendario', label: 'Calendario', icon: CalendarDays },
   { to: '/admin/estudiantes', label: 'Estudiantes', icon: Users },
+  { to: '/admin/justificaciones', label: 'Justificaciones', icon: FileClock },
   { to: '/admin/actividades', label: 'Actividades', icon: History },
   { to: '/admin/modulos', label: 'Módulos', icon: Library },
   { to: '/admin/nuevo-modulo', label: 'Nuevo módulo', icon: SquarePlus },
@@ -68,6 +71,8 @@ export function AdminLayout() {
     }
   }
   const [searchOpen, setSearchOpen] = useState(false)
+  const hasModule = !!useActiveModule().data
+  const pendingJustifications = useJustifications({ status: 'PENDING' }, hasModule).data?.pending ?? 0
   const { pathname } = useLocation()
 
   // Ctrl+K / ⌘K abre la búsqueda desde cualquier página.
@@ -127,7 +132,9 @@ export function AdminLayout() {
         <ActiveModuleCard collapsed={collapsed} />
 
         <nav className={cn('relative flex-1 space-y-1 overflow-y-auto px-4 py-6', collapsed && 'lg:px-3')}>
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {NAV.map(({ to, label, icon: Icon, end }) => {
+            const badge = to === '/admin/justificaciones' ? pendingJustifications : 0
+            return (
             <NavLink
               key={to}
               to={to}
@@ -145,15 +152,27 @@ export function AdminLayout() {
             >
               <Icon className="size-5 shrink-0" />
               <span className={cn('truncate', compact)}>{label}</span>
+              {badge > 0 && (
+                <span
+                  className={cn(
+                    'ml-auto rounded-full bg-alert px-1.5 text-[11px] font-bold text-white',
+                    collapsed && 'lg:absolute lg:top-1 lg:right-2 lg:ml-0',
+                  )}
+                  title={`${badge} por revisar`}
+                >
+                  {badge}
+                </span>
+              )}
             </NavLink>
-          ))}
+            )
+          })}
         </nav>
 
         <UserCard collapsed={collapsed} />
       </aside>
 
       <header className="sticky top-0 z-30 border-b border-line/60 bg-canvas/80 backdrop-blur-md print:hidden">
-        <div className="mx-auto flex h-18 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-10">
+        <div className="mx-auto flex h-18 max-w-[1680px] items-center gap-3 px-4 sm:px-6 lg:px-10">
           <button
             type="button"
             onClick={toggleMenu}
@@ -184,7 +203,7 @@ export function AdminLayout() {
         </div>
       </header>
 
-      <main className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10 lg:py-8 print:max-w-none print:p-8">
+      <main className="relative mx-auto max-w-[1680px] px-4 py-6 sm:px-6 lg:px-10 lg:py-8 print:max-w-none print:p-8">
         <Outlet />
       </main>
 

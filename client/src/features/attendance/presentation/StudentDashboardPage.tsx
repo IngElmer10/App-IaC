@@ -1,5 +1,5 @@
 import { AlarmClock, CalendarDays, CheckCircle2, FileCheck2, Fingerprint, ShieldCheck } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { cn } from '../../../shared/lib/cn'
 import { getErrorMessage } from '../../../core/http/api-error'
 import { formatLongDate, formatTime } from '../../../shared/lib/format'
@@ -8,14 +8,20 @@ import { Card, CardHeader } from '../../../shared/ui/Card'
 import { EmptyState } from '../../../shared/ui/EmptyState'
 import { PageLoader } from '../../../shared/ui/Spinner'
 import { useToast } from '../../../shared/ui/toast'
+import { useMyJustifications } from '../../justifications/application/justifications.queries'
+import { canJustify } from '../../justifications/domain/justification'
+import { JustificationNote } from '../../justifications/presentation/JustificationNote'
+import { JustifyDialog } from '../../justifications/presentation/JustifyDialog'
 import { useMarkAttendance, useMyAttendance } from '../application/attendance.queries'
-import { isAttended, type MyAttendance } from '../domain/attendance'
+import { isAttended, type AttendanceRecord, type MyAttendance } from '../domain/attendance'
 import { AttendanceHistoryTable } from './AttendanceHistoryTable'
 import { AttendanceStats, RiskBanner } from './AttendanceStats'
 import { MarkCountdownNotice } from './MarkCountdownNotice'
 
 export function StudentDashboardPage() {
   const { data, isLoading, error, dataUpdatedAt } = useMyAttendance()
+  const justifications = useMyJustifications()
+  const [justifying, setJustifying] = useState<AttendanceRecord | null>(null)
 
   if (isLoading) return <PageLoader />
   if (error || !data) {
@@ -47,8 +53,23 @@ export function StudentDashboardPage() {
 
       <Card>
         <CardHeader title="Mi historial" description={`${data.summary.total} sesiones de clase en este módulo`} />
-        <AttendanceHistoryTable records={data.records} today={data.today} />
+        <AttendanceHistoryTable
+          records={data.records}
+          today={data.today}
+          renderExtra={(record) => {
+            // La más reciente primero (el servidor las ordena así).
+            const forSession = (justifications.data ?? []).filter((j) => j.sessionId === record.sessionId)
+            return (
+              <JustificationNote
+                justification={forSession[0]}
+                canJustify={canJustify(record, data.today, forSession)}
+                onJustify={() => setJustifying(record)}
+              />
+            )
+          }}
+        />
       </Card>
+      <JustifyDialog record={justifying} onClose={() => setJustifying(null)} />
     </div>
   )
 }

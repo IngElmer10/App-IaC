@@ -7,6 +7,7 @@ import { ActivityModule } from './modules/activity/activity.module';
 import { AdminsModule } from './modules/admins/admins.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { JustificationsModule } from './modules/justifications/justifications.module';
 import { ClassSessionsModule } from './modules/class-sessions/class-sessions.module';
 import { StudentsModule } from './modules/students/students.module';
 import { SharedModule } from './shared/shared.module';
@@ -24,6 +25,7 @@ import { SharedModule } from './shared/shared.module';
     ClassSessionsModule,
     AttendanceModule,
     ActivityModule,
+    JustificationsModule,
   ],
 })
 export class AppModule {}

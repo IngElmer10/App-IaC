@@ -7,6 +7,9 @@ import { Button } from '../../../shared/ui/Button'
 import { Modal } from '../../../shared/ui/Modal'
 import { useToast } from '../../../shared/ui/toast'
 import { useActiveModule } from '../../academic-modules/application/academic-modules.queries'
+import { useJustificationActions } from '../../justifications/application/justifications.queries'
+import { imagesError } from '../../justifications/domain/justification'
+import { ImagePicker } from '../../justifications/presentation/ImagePicker'
 import { useUpdateAttendance } from '../application/attendance.queries'
 import {
   ALL_STATUSES,
@@ -41,18 +44,34 @@ function EditForm({ target, onClose }: { target: EditTarget; onClose: () => void
   const toast = useToast()
   const [status, setStatus] = useState<EditableStatus>(record.status === 'PRESENTE' ? 'FALTA' : 'PRESENTE')
   const [reason, setReason] = useState('')
+  // Pruebas opcionales (p. ej. capturas que el estudiante mandó por WhatsApp).
+  const [files, setFiles] = useState<File[]>([])
+  const { createByAdmin } = useJustificationActions()
+  const withEvidence = files.length > 0
+  const evidenceError = withEvidence
+    ? reason.trim().length < 5
+      ? 'Con pruebas adjuntas, escribe el motivo (al menos 5 caracteres)'
+      : imagesError(files, 1)
+    : null
 
-  const save = () =>
+  const onSaved = () => {
+    toast.success(`${student.fullName}: ${STATUS_LABELS[record.status]} → ${STATUS_LABELS[status]}`)
+    onClose()
+  }
+
+  const save = () => {
+    if (withEvidence) {
+      createByAdmin.mutate(
+        { studentId: student.id, sessionId: record.sessionId, status, reason, files },
+        { onSuccess: onSaved, onError: (err) => toast.error(getErrorMessage(err)) },
+      )
+      return
+    }
     update.mutate(
       { studentId: student.id, sessionId: record.sessionId, status, reason: reason.trim() || undefined },
-      {
-        onSuccess: () => {
-          toast.success(`${student.fullName}: ${STATUS_LABELS[record.status]} → ${STATUS_LABELS[status]}`)
-          onClose()
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
+      { onSuccess: onSaved, onError: (err) => toast.error(getErrorMessage(err)) },
     )
+  }
 
   return (
     <div className="space-y-5">
@@ -99,13 +118,30 @@ function EditForm({ target, onClose }: { target: EditTarget; onClose: () => void
         />
       </div>
 
-      <p className="text-xs text-muted">El cambio quedará registrado con tu usuario, la fecha, la hora y los valores anterior y nuevo.</p>
+      <div className="space-y-1.5">
+        <p className="text-sm font-semibold">
+          Pruebas <span className="font-normal text-muted">(opcional)</span>
+        </p>
+        <ImagePicker files={files} onChange={setFiles} />
+      </div>
+      {evidenceError && (
+        <p className="rounded-xl bg-alert-soft px-4 py-3 text-sm font-medium text-alert-ink">{evidenceError}</p>
+      )}
+
+      <p className="text-xs text-muted">
+        El cambio quedará registrado con tu usuario, la fecha, la hora y los valores anterior y nuevo
+        {withEvidence && '; las imágenes quedan en Justificaciones'}.
+      </p>
 
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose}>
           Cancelar
         </Button>
-        <Button onClick={save} loading={update.isPending} disabled={status === record.status}>
+        <Button
+          onClick={save}
+          loading={update.isPending || createByAdmin.isPending}
+          disabled={status === record.status || !!evidenceError}
+        >
           Guardar cambio
         </Button>
       </div>

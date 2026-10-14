@@ -5,12 +5,17 @@ import { AdminOrmEntity } from '../modules/admins/infrastructure/persistence/adm
 import { AttendanceChangeOrmEntity } from '../modules/attendance/infrastructure/persistence/attendance-change.orm-entity';
 import { AttendanceOrmEntity } from '../modules/attendance/infrastructure/persistence/attendance.orm-entity';
 import { ClassSessionOrmEntity } from '../modules/class-sessions/infrastructure/persistence/class-session.orm-entity';
+import {
+  JustificationFileOrmEntity,
+  JustificationOrmEntity,
+} from '../modules/justifications/infrastructure/persistence/justification.orm-entity';
 import { StudentOrmEntity } from '../modules/students/infrastructure/persistence/student.orm-entity';
 import { InitialSchema1760400000000 } from './migrations/1760400000000-initial-schema';
 import { AttendanceRulesAndProfile1760500000000 } from './migrations/1760500000000-attendance-rules-and-profile';
 import { AttendanceScoring1760600000000 } from './migrations/1760600000000-attendance-scoring';
 import { ModuleScheduling1760700000000 } from './migrations/1760700000000-module-scheduling';
 import { StudentEditingExtraFields1760800000000 } from './migrations/1760800000000-student-editing-extra-fields';
+import { Justifications1760900000000 } from './migrations/1760900000000-justifications';
 
 export const ORM_ENTITIES = [
   AdminOrmEntity,
@@ -20,6 +25,8 @@ export const ORM_ENTITIES = [
   AttendanceOrmEntity,
   AttendanceChangeOrmEntity,
   ActivityLogOrmEntity,
+  JustificationOrmEntity,
+  JustificationFileOrmEntity,
 ];
 
 export function buildDataSourceOptions(
@@ -39,6 +46,7 @@ export function buildDataSourceOptions(
       AttendanceScoring1760600000000,
       ModuleScheduling1760700000000,
       StudentEditingExtraFields1760800000000,
+      Justifications1760900000000,
     ],
     synchronize: false,
   };

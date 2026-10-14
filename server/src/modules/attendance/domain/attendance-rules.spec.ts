@@ -86,9 +86,10 @@ describe('statusForStudentMark', () => {
 });
 
 describe('ensureStatusAllowed', () => {
-  it('sin reglas solo permite Presente y Falta', () => {
+  it('sin reglas permite Presente, Falta y Justificado, pero no Atraso', () => {
     expect(() => ensureStatusAllowed(DEFAULT_ATTENDANCE_RULES, 'ATRASO')).toThrow(BusinessRuleError);
     expect(() => ensureStatusAllowed(DEFAULT_ATTENDANCE_RULES, 'FALTA')).not.toThrow();
+    expect(() => ensureStatusAllowed(DEFAULT_ATTENDANCE_RULES, 'JUSTIFICADO')).not.toThrow();
     expect(() => ensureStatusAllowed(RULES, 'JUSTIFICADO')).not.toThrow();
   });
 });

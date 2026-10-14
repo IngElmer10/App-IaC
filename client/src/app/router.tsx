@@ -8,6 +8,7 @@ import { StudentDashboardPage } from '../features/attendance/presentation/Studen
 import { LoginPage } from '../features/auth/presentation/LoginPage'
 import { HomeRedirect, RequireRole } from '../features/auth/presentation/RequireRole'
 import { AdminHomePage } from '../features/dashboard/presentation/AdminHomePage'
+import { JustificationsPage } from '../features/justifications/presentation/JustificationsPage'
 import { ModuleDetailPage } from '../features/module-history/presentation/ModuleDetailPage'
 import { ModulesPage } from '../features/module-history/presentation/ModulesPage'
 import { ProfilePage } from '../features/profile/presentation/ProfilePage'
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
           { path: 'asistencias', element: <AttendanceOverviewPage /> },
           { path: 'calendario', element: <ModuleCalendarPage /> },
           { path: 'estudiantes', element: <StudentsPage /> },
+          { path: 'justificaciones', element: <JustificationsPage /> },
           { path: 'estudiantes/:studentId', element: <StudentAttendancePage /> },
           { path: 'actividades', element: <ActivityPage /> },
           { path: 'nuevo-modulo', element: <NewModulePage /> },

@@ -3,8 +3,11 @@ export type StoredAttendanceStatus = 'PRESENTE' | 'ATRASO' | 'FALTA' | 'JUSTIFIC
 export type AttendanceSource = 'STUDENT' | 'ADMIN';
 
 export const STORED_STATUSES: StoredAttendanceStatus[] = ['PRESENTE', 'ATRASO', 'FALTA', 'JUSTIFICADO'];
-/** Estados que existen sin las reglas de puntualidad (RF-07). */
-export const BASIC_STATUSES: StoredAttendanceStatus[] = ['PRESENTE', 'FALTA'];
+/**
+ * Estados disponibles sin las reglas de puntualidad: Presente y Falta (RF-07) más Justificado,
+ * que el admin usa para casos especiales (por ejemplo, al aprobar una justificación).
+ */
+export const BASIC_STATUSES: StoredAttendanceStatus[] = ['PRESENTE', 'FALTA', 'JUSTIFICADO'];
 
 /** Estados que se muestran: los guardados más los derivados de la fecha. */
 export type AttendanceDisplayStatus = StoredAttendanceStatus | 'PENDIENTE' | 'PROGRAMADA';
@@ -27,3 +30,10 @@ export function resolveAttendanceStatus(
   if (classDate === today) return markingClosedToday ? 'FALTA' : 'PENDIENTE';
   return 'PROGRAMADA';
 }
+
+export const STATUS_LABELS: Record<StoredAttendanceStatus, string> = {
+  PRESENTE: 'Presente',
+  ATRASO: 'Atraso',
+  FALTA: 'Falta',
+  JUSTIFICADO: 'Justificado',
+};

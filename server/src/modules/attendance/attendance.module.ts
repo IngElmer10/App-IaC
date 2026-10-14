@@ -41,5 +41,6 @@ import { TypeormAttendanceRepository } from './infrastructure/persistence/typeor
     UpdateAttendanceUseCase,
     ExportAttendanceUseCase,
   ],
+  exports: [AttendanceRepository, StudentContextService, StudentHistoryService, UpdateAttendanceUseCase],
 })
 export class AttendanceModule {}

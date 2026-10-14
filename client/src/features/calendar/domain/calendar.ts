@@ -67,13 +67,14 @@ export function calendarSummaryText({
 }) {
   const first = sessions[0].classDate
   const last = sessions[sessions.length - 1].classDate
+  // Sin emojis: algunas versiones de WhatsApp y del correo los muestran como "?".
   const lines = [
-    `📅 Calendario de clases del módulo: ${moduleName}`,
-    ...(teacherName ? [`👤 Docente: ${teacherName}`] : []),
-    `▶️ Inicio: ${longDate(first)}`,
-    `⏹️ Fin: ${longDate(last)}`,
-    ...scheduleOf(sessions).map((s) => `🕖 Clases: ${s.days} · ${s.hours}`),
-    `🗓️ Fechas (${sessions.length}): ${sessions.map((s) => shortDate(s.classDate)).join(', ')}`,
+    `*Calendario de clases del módulo: ${moduleName}*`,
+    ...(teacherName ? [`- Docente: ${teacherName}`] : []),
+    `- Inicio: ${longDate(first)}`,
+    `- Fin: ${longDate(last)}`,
+    ...scheduleOf(sessions).map((s) => `- Clases: ${s.days}, ${s.hours.replace(' – ', ' a ')}`),
+    `- Fechas (${sessions.length}): ${sessions.map((s) => shortDate(s.classDate)).join(', ')}`,
   ]
   return lines.join('\n')
 }

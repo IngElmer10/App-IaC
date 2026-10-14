@@ -10,7 +10,7 @@ import { PageHeader } from '../../../shared/ui/PageHeader'
 import { PageLoader } from '../../../shared/ui/Spinner'
 import { useStudents } from '../../students/application/students.queries'
 import { useActivity } from '../application/activity.queries'
-import { ACTION_LABELS, type ActivityAction } from '../domain/activity'
+import { actionLabel, type ActivityAction } from '../domain/activity'
 
 const ACTION_TONES: Record<ActivityAction, ChipTone> = {
   LOGIN: 'neutral',
@@ -22,6 +22,14 @@ const ACTION_TONES: Record<ActivityAction, ChipTone> = {
   UPDATE_RULES: 'warning',
   SCHEDULE_MODULE: 'info',
   CANCEL_SCHEDULE: 'neutral',
+  UPDATE_FIELDS: 'info',
+  ADD_STUDENT: 'teal',
+  EDIT_STUDENT: 'accent',
+  DEACTIVATE_STUDENT: 'alert',
+  REACTIVATE_STUDENT: 'teal',
+  SUBMIT_JUSTIFICATION: 'info',
+  APPROVE_JUSTIFICATION: 'teal',
+  REJECT_JUSTIFICATION: 'alert',
 }
 
 const PAGE_SIZE = 20
@@ -122,7 +130,7 @@ export function ActivityView({ moduleId }: { moduleId?: number }) {
                         <p className="text-xs text-muted">{log.actorType === 'ADMIN' ? 'Administrador' : 'Estudiante'}</p>
                       </td>
                       <td className="px-5 py-3">
-                        <Chip tone={ACTION_TONES[log.action]}>{ACTION_LABELS[log.action]}</Chip>
+                        <Chip tone={ACTION_TONES[log.action] ?? 'neutral'}>{actionLabel(log.action)}</Chip>
                       </td>
                       <td className="px-5 py-3 text-muted">
                         {log.description}

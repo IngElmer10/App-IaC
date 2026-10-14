@@ -1,4 +1,4 @@
-import { AlarmClock, Bell, CalendarClock, CalendarPlus, Layers, TriangleAlert, UserX } from 'lucide-react'
+import { AlarmClock, Bell, CalendarClock, CalendarPlus, FileClock, Layers, TriangleAlert, UserX } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { cn } from '../../../shared/lib/cn'
@@ -6,6 +6,7 @@ import { formatTime } from '../../../shared/lib/format'
 import { useActiveModule, useModules } from '../../academic-modules/application/academic-modules.queries'
 import { formatScheduled, relativeFromNow } from '../../module-history/presentation/schedule-format'
 import { useDayActivity } from '../../activity/application/activity.queries'
+import { useJustifications } from '../../justifications/application/justifications.queries'
 import { useAttendanceOverview } from '../../attendance/application/attendance.queries'
 import type { AttendanceStatus } from '../../attendance/domain/attendance'
 import { StatusChip } from '../../attendance/presentation/StatusChip'
@@ -47,6 +48,7 @@ function useNotifications() {
   const overview = useAttendanceOverview({}, { refetchInterval: 30_000, enabled: hasModule })
   const activity = useDayActivity(today, hasModule)
   const scheduled = useModules().data?.find((m) => m.status === 'SCHEDULED')
+  const pendingJustifications = useJustifications({ status: 'PENDING' }, hasModule).data?.pending ?? 0
 
   const notices: Notice[] = []
   if (!module.isLoading && !hasModule) {
@@ -57,6 +59,18 @@ function useNotifications() {
       title: 'No hay un módulo activo',
       detail: 'Importa estudiantes y fechas para empezar.',
       to: '/admin/nuevo-modulo',
+      important: true,
+    })
+  }
+
+  if (pendingJustifications > 0) {
+    notices.push({
+      key: 'justifications',
+      icon: <FileClock className="size-4" />,
+      tone: 'bg-info-soft text-info-ink',
+      title: `${pendingJustifications} ${pendingJustifications === 1 ? 'justificación por revisar' : 'justificaciones por revisar'}`,
+      detail: 'Estudiantes que enviaron pruebas de una falta o un atraso.',
+      to: '/admin/justificaciones',
       important: true,
     })
   }

@@ -10,6 +10,14 @@ export type ActivityAction =
   | 'UPDATE_RULES'
   | 'SCHEDULE_MODULE'
   | 'CANCEL_SCHEDULE'
+  | 'UPDATE_FIELDS'
+  | 'ADD_STUDENT'
+  | 'EDIT_STUDENT'
+  | 'DEACTIVATE_STUDENT'
+  | 'REACTIVATE_STUDENT'
+  | 'SUBMIT_JUSTIFICATION'
+  | 'APPROVE_JUSTIFICATION'
+  | 'REJECT_JUSTIFICATION'
 
 export interface ActivityLog {
   id: number
@@ -48,4 +56,20 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   UPDATE_RULES: 'Cambió reglas de asistencia',
   SCHEDULE_MODULE: 'Programó módulo',
   CANCEL_SCHEDULE: 'Canceló programación',
+  UPDATE_FIELDS: 'Cambió campos adicionales',
+  ADD_STUDENT: 'Agregó estudiante',
+  EDIT_STUDENT: 'Editó estudiante',
+  DEACTIVATE_STUDENT: 'Dio de baja',
+  REACTIVATE_STUDENT: 'Reincorporó estudiante',
+  SUBMIT_JUSTIFICATION: 'Envió justificación',
+  APPROVE_JUSTIFICATION: 'Aprobó justificación',
+  REJECT_JUSTIFICATION: 'Rechazó justificación',
 }
+
+/** Nombre de la acción; si el servidor agrega una nueva antes que la interfaz, se muestra igual. */
+export const actionLabel = (action: string) =>
+  ACTION_LABELS[action as ActivityAction] ??
+  action
+    .toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/^./, (c) => c.toUpperCase())

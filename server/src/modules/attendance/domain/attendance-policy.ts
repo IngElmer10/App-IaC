@@ -53,11 +53,11 @@ export function ensureAdminChangeIsEffective(
   }
 }
 
-/** Atraso y Justificado solo se usan con las reglas de puntualidad activas. */
+/** Atraso solo existe con las reglas de puntualidad activas. */
 export function ensureStatusAllowed(rules: AttendanceRules, status: StoredAttendanceStatus): void {
   if (!rules.enabled && !BASIC_STATUSES.includes(status)) {
     throw new BusinessRuleError(
-      'Activa las reglas de puntualidad del módulo para usar los estados Atraso o Justificado',
+      'Activa las reglas de puntualidad del módulo para usar el estado Atraso',
     );
   }
 }

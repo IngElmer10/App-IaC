@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate, formatTime } from '../../../shared/lib/format'
 import { isAttended, type AttendanceRecord } from '../domain/attendance'
@@ -62,11 +62,14 @@ export function AttendanceHistoryTable({
   records,
   today,
   onEdit,
+  renderExtra,
 }: {
   records: AttendanceRecord[]
   today: string
   /** Si se pasa, cada estado se puede modificar (administrador). */
   onEdit?: (record: AttendanceRecord) => void
+  /** Contenido adicional por sesión en Observaciones (p. ej. justificaciones). */
+  renderExtra?: (record: AttendanceRecord) => ReactNode
 }) {
   const [view, setView] = useState<View>('ALL')
   const [month, setMonth] = useState(today.slice(0, 7))
@@ -157,7 +160,10 @@ export function AttendanceHistoryTable({
                       <StatusCell record={record} onEdit={onEdit} />
                     </td>
                     <td className="px-5 py-3 text-center font-semibold tabular-nums">{score(record)}</td>
-                    <td className="max-w-xs px-5 py-3 text-muted">{observation(record)}</td>
+                    <td className="max-w-xs px-5 py-3 text-muted">
+                      {observation(record)}
+                      {renderExtra && <div className="mt-1.5 empty:hidden">{renderExtra(record)}</div>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -184,6 +190,7 @@ export function AttendanceHistoryTable({
                   <span className="text-muted">{observation(record) || 'Sesión de clase'}</span>
                   <span className="shrink-0 font-semibold tabular-nums">{score(record)}</span>
                 </div>
+                {renderExtra && <div className="empty:hidden">{renderExtra(record)}</div>}
               </li>
             ))}
           </ul>

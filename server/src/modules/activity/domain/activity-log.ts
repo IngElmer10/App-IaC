@@ -14,7 +14,10 @@ export type ActivityAction =
   | 'ADD_STUDENT'
   | 'EDIT_STUDENT'
   | 'DEACTIVATE_STUDENT'
-  | 'REACTIVATE_STUDENT';
+  | 'REACTIVATE_STUDENT'
+  | 'SUBMIT_JUSTIFICATION'
+  | 'APPROVE_JUSTIFICATION'
+  | 'REJECT_JUSTIFICATION';
 
 export interface ActivityLog {
   id: number;
