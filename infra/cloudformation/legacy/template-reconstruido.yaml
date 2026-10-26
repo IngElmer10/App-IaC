@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Aprovisionamiento con AWS CloudFormation (2 servidores EC2 y grupos de seguridad)
+  Proyecto: Control de Asistencia Academica - Diplomado DevSecOps Modulo 2 (IaC)
+# Reconstruccion de las capturas; no es copia byte a byte del original.
+Parameters:
+  Proyecto:
+    Type: String
+    Default: control-asistencia
+    Description: Nombre identificador del proyecto
+  Ambiente:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, qa, prod]
+    Description: Entorno de despliegue
+  TipoInstancia:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t3.small]
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: diplo-mod2-key
+    Description: Par de claves SSH existente
+  ImagenAmi:
+    Type: AWS::EC2::Image::Id
+    Default: ami-0ee52710c51ed0969
+    Description: AMI que debe verificarse para la region us-east-2 (captura original)
+Resources:
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Reglas de firewall para Servidor Backend (NestJS / PostgreSQL)
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 0.0.0.0/0, Description: Acceso SSH demostracion - INSEGURO}
+        - {IpProtocol: tcp, FromPort: 3000, ToPort: 3000, CidrIp: 0.0.0.0/0, Description: API REST NestJS - INSEGURO}
+        - {IpProtocol: tcp, FromPort: 5432, ToPort: 5432, CidrIp: 0.0.0.0/0, Description: PostgreSQL - INSEGURO}
+      Tags:
+        - {Key: Name, Value: !Sub 'sg-backend-${Proyecto}-${Ambiente}'}
+        - {Key: Proyecto, Value: !Ref Proyecto}
+        - {Key: Ambiente, Value: !Ref Ambiente}
+  FrontendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Reglas para Frontend (React / Nginx)
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 0.0.0.0/0, Description: SSH demostracion - INSEGURO}
+        - {IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0, Description: HTTP Nginx}
+      Tags:
+        - {Key: Name, Value: !Sub 'sg-frontend-${Proyecto}-${Ambiente}'}
+        - {Key: Proyecto, Value: !Ref Proyecto}
+        - {Key: Ambiente, Value: !Ref Ambiente}
+  BackendInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImagenAmi
+      InstanceType: !Ref TipoInstancia
+      KeyName: !Ref KeyName
+      SecurityGroupIds: [!Ref BackendSecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs: {VolumeSize: 20, VolumeType: gp3, Encrypted: true, DeleteOnTermination: true}
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install -y nginx
+          echo '<h1>Control de Asistencia - Servidor Backend (API / DB)</h1><p>Ambiente: ${Ambiente} | Estado: Activo | Aprovisionado con AWS CloudFormation</p>' > /var/www/html/index.html
+          systemctl restart nginx
+      Tags:
+        - {Key: Name, Value: !Sub 'vm-backend-${Proyecto}-${Ambiente}'}
+        - {Key: Proyecto, Value: !Ref Proyecto}
+        - {Key: Ambiente, Value: !Ref Ambiente}
+        - {Key: Role, Value: Backend-API-DB}
+  FrontendInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImagenAmi
+      InstanceType: !Ref TipoInstancia
+      KeyName: !Ref KeyName
+      SecurityGroupIds: [!Ref FrontendSecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs: {VolumeSize: 15, VolumeType: gp3, Encrypted: true, DeleteOnTermination: true}
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install -y nginx
+          echo '<h1>Control de Asistencia - Servidor Frontend (UI / Web)</h1><p>Ambiente: ${Ambiente} | Estado: Activo | Aprovisionado con AWS CloudFormation</p>' > /var/www/html/index.html
+          systemctl restart nginx
+      Tags:
+        - {Key: Name, Value: !Sub 'vm-frontend-${Proyecto}-${Ambiente}'}
+        - {Key: Proyecto, Value: !Ref Proyecto}
+        - {Key: Ambiente, Value: !Ref Ambiente}
+        - {Key: Role, Value: Frontend-UI-Nginx}
+Outputs:
+  IdBackend: {Description: ID EC2 Backend, Value: !Ref BackendInstance}
+  IpPublicaBackend: {Description: IP publica Backend, Value: !GetAtt BackendInstance.PublicIp}
+  IdFrontend: {Description: ID EC2 Frontend, Value: !Ref FrontendInstance}
+  IpPublicaFrontend: {Description: IP publica Frontend, Value: !GetAtt FrontendInstance.PublicIp}
+  UrlFrontend:
+    Description: URL publica para el frontend de demostracion
+    Value: !Sub 'http://${FrontendInstance.PublicIp}'
+  ConexionSSHBackend:
+    Description: Comando de ejemplo (ajustar ruta local y nombre de clave)
+    Value: !Sub 'ssh -i ~/.ssh/diplo_mod2_key ubuntu@${BackendInstance.PublicIp}'
+  ConexionSSHFrontend:
+    Description: Comando de ejemplo (ajustar ruta local y nombre de clave)
+    Value: !Sub 'ssh -i ~/.ssh/diplo_mod2_key ubuntu@${FrontendInstance.PublicIp}'

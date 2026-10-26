@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Nested stack reutilizable para EC2 frontend/backend. Demo IaC: sin app real ni secretos.'
+Parameters:
+  Proyecto:
+    Type: String
+  Ambiente:
+    Type: String
+  Rol:
+    Type: String
+    AllowedValues: [frontend, backend]
+  TipoInstancia:
+    Type: String
+  ImagenAmi:
+    Type: AWS::EC2::Image::Id
+  KeyName:
+    Type: String
+    Default: ''
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+  SecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+Conditions:
+  TieneKeyPair: !Not [!Equals [!Ref KeyName, '']]
+Resources:
+  Instancia:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImagenAmi
+      InstanceType: !Ref TipoInstancia
+      KeyName: !If [TieneKeyPair, !Ref KeyName, !Ref 'AWS::NoValue']
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+      MetadataOptions:
+        HttpTokens: required
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 12
+            VolumeType: gp3
+            Encrypted: true
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -eux
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -y
+          if [ '${Rol}' = 'frontend' ]; then
+            apt-get install -y nginx
+            echo '<h1>Control de asistencia - Frontend (demo IaC)</h1>' > /var/www/html/index.html
+            systemctl enable --now nginx
+          else
+            apt-get install -y python3
+            mkdir -p /opt/attendance-demo
+            echo '<h1>Backend - instancia creada por Git sync</h1>' > /opt/attendance-demo/index.html
+            cat > /etc/systemd/system/attendance-demo.service <<'UNIT'
+          [Unit]
+          Description=Demo simple HTTP backend
+          After=network.target
+          [Service]
+          ExecStart=/usr/bin/python3 -m http.server 3000 --directory /opt/attendance-demo
+          Restart=always
+          [Install]
+          WantedBy=multi-user.target
+          UNIT
+            systemctl daemon-reload
+            systemctl enable --now attendance-demo
+          fi
+      Tags:
+        - Key: Name
+          Value: !Sub '${Proyecto}-${Ambiente}-${Rol}'
+        - Key: Rol
+          Value: !Ref Rol
+        - Key: Ambiente
+          Value: !Ref Ambiente
+Outputs:
+  InstanceId:
+    Value: !Ref Instancia
+  PublicIp:
+    Value: !GetAtt Instancia.PublicIp
+  PrivateIp:
+    Value: !GetAtt Instancia.PrivateIp

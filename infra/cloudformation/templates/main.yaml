@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Control de asistencia - CloudFormation nested stacks - fase inicial Git sync (una EC2)'
+
+Parameters:
+  Proyecto:
+    Type: String
+    Default: control-asistencia
+    AllowedPattern: '^[a-zA-Z][a-zA-Z0-9-]{2,28}$'
+  Ambiente:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, qa, prod]
+  TipoInstancia:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t3.small]
+  BucketArtefactos:
+    Type: String
+    Description: 'Bucket S3 PRIVADO que contiene las plantillas nested (en la misma region).'
+  PrefijoArtefactos:
+    Type: String
+    Default: cloudformation-demo
+    Description: 'Prefijo S3 donde se cargaron red.yaml, seguridad.yaml y servidor.yaml.'
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/canonical/ubuntu/server/noble/stable/current/amd64/hvm/ebs-gp3/ami-id'
+    Description: 'Parametro publico de Canonical para Ubuntu 24.04 x86_64.'
+  KeyName:
+    Type: String
+    Default: ''
+    Description: 'KeyPair existente; opcional para la demostracion sin SSH.'
+  CidrSSH:
+    Type: String
+    Default: ''
+    Description: 'Dejar vacio para deshabilitar SSH, o configurar TU_IP_PUBLICA/32 si es necesario.'
+
+Resources:
+  RedStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${BucketArtefactos}.s3.${AWS::Region}.${AWS::URLSuffix}/${PrefijoArtefactos}/red.yaml'
+      Parameters:
+        Proyecto: !Ref Proyecto
+        Ambiente: !Ref Ambiente
+
+  SeguridadStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${BucketArtefactos}.s3.${AWS::Region}.${AWS::URLSuffix}/${PrefijoArtefactos}/seguridad.yaml'
+      Parameters:
+        Proyecto: !Ref Proyecto
+        Ambiente: !Ref Ambiente
+        VpcId: !GetAtt RedStack.Outputs.VpcId
+        CidrSSH: !Ref CidrSSH
+
+  FrontendStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${BucketArtefactos}.s3.${AWS::Region}.${AWS::URLSuffix}/${PrefijoArtefactos}/servidor.yaml'
+      Parameters:
+        Proyecto: !Ref Proyecto
+        Ambiente: !Ref Ambiente
+        Rol: frontend
+        TipoInstancia: !Ref TipoInstancia
+        ImagenAmi: !Ref LatestAmiId
+        KeyName: !Ref KeyName
+        SubnetId: !GetAtt RedStack.Outputs.SubnetPublicaId
+        SecurityGroupId: !GetAtt SeguridadStack.Outputs.FrontendSecurityGroupId
+
+Outputs:
+  FrontendInstanceId:
+    Description: 'Instancia inicial para demostrar Git sync.'
+    Value: !GetAtt FrontendStack.Outputs.InstanceId
+  FrontendPublicIp:
+    Value: !GetAtt FrontendStack.Outputs.PublicIp
+  FrontendUrl:
+    Value: !Sub
+      - 'http://${IP}'
+      - IP: !GetAtt FrontendStack.Outputs.PublicIp
