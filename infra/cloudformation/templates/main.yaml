@@ -79,7 +79,7 @@ Resources:
         ImagenAmi: !Ref LatestAmiId
         KeyName: !Ref KeyName
         SubnetId: !GetAtt RedStack.Outputs.SubnetPublicaId
-        SecurityGroupId: !GetAtt SeguridadStack.Outputs.FrontendSecurityGroupId
+        SecurityGroupId: !GetAtt SeguridadStack.Outputs.BackendSecurityGroupId
 
 Outputs:
   FrontendInstanceId:
