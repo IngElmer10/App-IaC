@@ -1,0 +1,13 @@
+# CloudFormation Git sync vigila este archivo y templates/main.yaml en la rama configurada.
+template-file-path: infra/cloudformation/templates/main.yaml
+parameters:
+  Proyecto: control-asistencia
+  Ambiente: dev
+  TipoInstancia: t3.micro
+  BucketArtefactos: iac-asistencia-cfn-2026-globamatic
+  PrefijoArtefactos: cloudformation-demo
+
+tags:
+  Proyecto: control-asistencia
+  Ambiente: dev
+  Herramienta: CloudFormation

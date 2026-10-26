@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Nested stack de seguridad: grupos de seguridad con acceso restringido.'
+Parameters:
+  Proyecto:
+    Type: String
+  Ambiente:
+    Type: String
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  CidrSSH:
+    Type: String
+    Default: ''
+Conditions:
+  AbrirSSH: !Not [!Equals [!Ref CidrSSH, '']]
+Resources:
+  FrontendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Frontend HTTP 80; SSH opcional limitado.'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - !If
+          - AbrirSSH
+          - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: !Ref CidrSSH}
+          - !Ref 'AWS::NoValue'
+      Tags:
+        - Key: Name
+          Value: !Sub '${Proyecto}-${Ambiente}-frontend-sg'
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'API puerto 3000 desde frontend; SSH opcional limitado.'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref FrontendSecurityGroup
+        - !If
+          - AbrirSSH
+          - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: !Ref CidrSSH}
+          - !Ref 'AWS::NoValue'
+      Tags:
+        - Key: Name
+          Value: !Sub '${Proyecto}-${Ambiente}-backend-sg'
+Outputs:
+  FrontendSecurityGroupId:
+    Value: !GetAtt FrontendSecurityGroup.GroupId
+  BackendSecurityGroupId:
+    Value: !GetAtt BackendSecurityGroup.GroupId

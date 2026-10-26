@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Nested stack de red: VPC, subnet publica e Internet Gateway.'
+Parameters:
+  Proyecto:
+    Type: String
+  Ambiente:
+    Type: String
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.20.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${Proyecto}-${Ambiente}-vpc'
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  VinculoInternetGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+  SubnetPublica:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.20.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${Proyecto}-${Ambiente}-publica'
+  TablaRutasPublicas:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+  RutaInternet:
+    Type: AWS::EC2::Route
+    DependsOn: VinculoInternetGateway
+    Properties:
+      RouteTableId: !Ref TablaRutasPublicas
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  AsociacionRutaPublica:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetPublica
+      RouteTableId: !Ref TablaRutasPublicas
+Outputs:
+  VpcId:
+    Value: !Ref Vpc
+  SubnetPublicaId:
+    Value: !Ref SubnetPublica
