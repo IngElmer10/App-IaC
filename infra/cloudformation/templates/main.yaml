@@ -53,54 +53,54 @@ Resources:
         VpcId: !GetAtt RedStack.Outputs.VpcId
         CidrSSH: !Ref CidrSSH
 
-  FrontendStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub 'https://${BucketArtefactos}.s3.${AWS::Region}.${AWS::URLSuffix}/${PrefijoArtefactos}/servidor.yaml'
-      Parameters:
-        Proyecto: !Ref Proyecto
-        Ambiente: !Ref Ambiente
-        Rol: frontend
-        TipoInstancia: !Ref TipoInstancia
-        ImagenAmi: !Ref LatestAmiId
-        KeyName: !Ref KeyName
-        SubnetId: !GetAtt RedStack.Outputs.SubnetPublicaId
-        SecurityGroupId: !GetAtt SeguridadStack.Outputs.FrontendSecurityGroupId
+  # FrontendStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub 'https://${BucketArtefactos}.s3.${AWS::Region}.${AWS::URLSuffix}/${PrefijoArtefactos}/servidor.yaml'
+  #     Parameters:
+  #       Proyecto: !Ref Proyecto
+  #       Ambiente: !Ref Ambiente
+  #       Rol: frontend
+  #       TipoInstancia: !Ref TipoInstancia
+  #       ImagenAmi: !Ref LatestAmiId
+  #       KeyName: !Ref KeyName
+  #       SubnetId: !GetAtt RedStack.Outputs.SubnetPublicaId
+  #       SecurityGroupId: !GetAtt SeguridadStack.Outputs.FrontendSecurityGroupId
 
-  BackendStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub 'https://${BucketArtefactos}.s3.${AWS::Region}.${AWS::URLSuffix}/${PrefijoArtefactos}/servidor.yaml'
-      Parameters:
-        Proyecto: !Ref Proyecto
-        Ambiente: !Ref Ambiente
-        Rol: backend
-        TipoInstancia: !Ref TipoInstancia
-        ImagenAmi: !Ref LatestAmiId
-        KeyName: !Ref KeyName
-        SubnetId: !GetAtt RedStack.Outputs.SubnetPublicaId
-        SecurityGroupId: !GetAtt SeguridadStack.Outputs.BackendSecurityGroupId
+  # BackendStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub 'https://${BucketArtefactos}.s3.${AWS::Region}.${AWS::URLSuffix}/${PrefijoArtefactos}/servidor.yaml'
+  #     Parameters:
+  #       Proyecto: !Ref Proyecto
+  #       Ambiente: !Ref Ambiente
+  #       Rol: backend
+  #       TipoInstancia: !Ref TipoInstancia
+  #       ImagenAmi: !Ref LatestAmiId
+  #       KeyName: !Ref KeyName
+  #       SubnetId: !GetAtt RedStack.Outputs.SubnetPublicaId
+  #       SecurityGroupId: !GetAtt SeguridadStack.Outputs.BackendSecurityGroupId
 
 Outputs:
-  FrontendInstanceId:
-    Description: 'Instancia inicial para demostrar Git sync.'
-    Value: !GetAtt FrontendStack.Outputs.InstanceId
-  FrontendPublicIp:
-    Value: !GetAtt FrontendStack.Outputs.PublicIp
-  FrontendUrl:
-    Value: !Sub
-      - 'http://${IP}'
-      - IP: !GetAtt FrontendStack.Outputs.PublicIp
+  # FrontendInstanceId:
+  #   Description: 'Instancia inicial para demostrar Git sync.'
+  #   Value: !GetAtt FrontendStack.Outputs.InstanceId
+  # FrontendPublicIp:
+  #   Value: !GetAtt FrontendStack.Outputs.PublicIp
+  # FrontendUrl:
+  #   Value: !Sub
+  #     - 'http://${IP}'
+  #     - IP: !GetAtt FrontendStack.Outputs.PublicIp
 
-  BackendInstanceId:
-    Description: 'Segunda instancia creada mediante Git sync.'
-    Value: !GetAtt BackendStack.Outputs.InstanceId
+  # BackendInstanceId:
+  #   Description: 'Segunda instancia creada mediante Git sync.'
+  #   Value: !GetAtt BackendStack.Outputs.InstanceId
 
-  BackendPublicIp:
-    Description: 'IP publica de la segunda instancia.'
-    Value: !GetAtt BackendStack.Outputs.PublicIp
+  # BackendPublicIp:
+  #   Description: 'IP publica de la segunda instancia.'
+  #   Value: !GetAtt BackendStack.Outputs.PublicIp
 
-  BackendUrl:
-    Value: !Sub
-      - 'http://${IP}'
-      - IP: !GetAtt BackendStack.Outputs.PublicIp
+  # BackendUrl:
+  #   Value: !Sub
+  #     - 'http://${IP}'
+  #     - IP: !GetAtt BackendStack.Outputs.PublicIp
