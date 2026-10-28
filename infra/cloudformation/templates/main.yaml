@@ -81,7 +81,7 @@ Resources:
   #       SubnetId: !GetAtt RedStack.Outputs.SubnetPublicaId
   #       SecurityGroupId: !GetAtt SeguridadStack.Outputs.BackendSecurityGroupId
 
-Outputs:
+# Outputs:
   # FrontendInstanceId:
   #   Description: 'Instancia inicial para demostrar Git sync.'
   #   Value: !GetAtt FrontendStack.Outputs.InstanceId
