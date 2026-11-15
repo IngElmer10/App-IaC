@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AttendanceState {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+}
+
+model AcademicModule {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  name        String
+  description String?
+  active      Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  students    Student[]
+  sessions    ClassSession[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String?  @unique
+  password  String
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student   Student?
+}
+
+model Student {
+  id               String          @id @default(cuid())
+  registrationCode String
+  fullName         String
+  email            String
+  phone            String?
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  userId           String?         @unique
+  moduleId         String?
+  user             User?           @relation(fields: [userId], references: [id])
+  module           AcademicModule? @relation(fields: [moduleId], references: [id])
+  attendances      Attendance[]
+
+  @@unique([moduleId, registrationCode])
+  @@unique([moduleId, email])
+}
+
+model ClassSession {
+  id         String          @id @default(cuid())
+  moduleId   String
+  title      String
+  date       DateTime
+  startTime  DateTime
+  endTime    DateTime
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  module     AcademicModule @relation(fields: [moduleId], references: [id])
+  attendances Attendance[]
+
+  @@unique([moduleId, date])
+}
+
+model Attendance {
+  id          String          @id @default(cuid())
+  sessionId   String
+  studentId   String
+  status      AttendanceState @default(PRESENT)
+  observedAt  DateTime?
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  session     ClassSession    @relation(fields: [sessionId], references: [id])
+  student     Student         @relation(fields: [studentId], references: [id])
+
+  @@unique([sessionId, studentId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  entity    String
+  entityId  String
+  action    String
+  actor     String?
+  payload   Json?
+  createdAt DateTime @default(now())
+}
+
+model PlatformPlan {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String
+  instanceType String
+  vcpu        Int
+  memoryMb    Int
+  storageGb   Int
+  maxStudents Int
+  maxSessions Int
+  active      Boolean  @default(true)
+  tenants     PlatformTenant[]
+  requests    TenantRequest[]
+}
+
+model PlatformTenant {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  contactEmail   String
+  contactPhone   String?
+  color          String   @default("#059669")
+  environment    String
+  engine         String
+  status         String   @default("PENDING")
+  planId         String
+  credentials    String
+  instanceId     String?
+  architectureVersion Int @default(1)
+  resources      Json?
+  migrationBackupId String?
+  migrationSnapshot Json?
+  publicUrl      String?
+  deployedVersion String?
+  health         Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  plan           PlatformPlan @relation(fields: [planId], references: [id])
+  operations     PlatformOperation[]
+  backups        PlatformBackup[]
+  alerts         PlatformAlert[]
+  request        TenantRequest?
+}
+
+model TenantRequest {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String
+  contactEmail    String
+  contactPhone    String
+  color           String   @default("#059669")
+  environment     String
+  engine          String
+  planId          String
+  credentials     String?
+  status          String   @default("PENDING")
+  rejectionReason String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  tenantId        String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  plan            PlatformPlan @relation(fields: [planId], references: [id])
+  tenant          PlatformTenant? @relation(fields: [tenantId], references: [id])
+  @@index([status, createdAt])
+}
+
+model PlatformOperation {
+  id          String   @id @default(cuid())
+  tenantId    String
+  action      String
+  state       String   @default("QUEUED")
+  progress    Int      @default(0)
+  actor       String
+  payload     Json?
+  logs        String[] @default([])
+  error       String?
+  appVersion  String   @default("0.2.0")
+  templateVersion String @default("1.0.0")
+  toolVersion String?
+  createdAt   DateTime @default(now())
+  finishedAt  DateTime?
+  tenant      PlatformTenant @relation(fields: [tenantId], references: [id])
+  @@index([state, createdAt])
+}
+
+model PlatformBackup {
+  id          String   @id @default(cuid())
+  tenantId    String
+  objectKey   String   @unique
+  createdAt   DateTime @default(now())
+  tenant      PlatformTenant @relation(fields: [tenantId], references: [id])
+}
+
+model PlatformAlert {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  state       String
+  message     String
+  detectedAt  DateTime @default(now())
+  resolvedAt  DateTime?
+  tenant      PlatformTenant @relation(fields: [tenantId], references: [id])
+  @@index([tenantId, state])
+}

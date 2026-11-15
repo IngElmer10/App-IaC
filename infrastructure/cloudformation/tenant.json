@@ -1,0 +1,22 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Independent attendance tenant with private PostgreSQL on encrypted EBS, SSM operations and restricted HTTP access.",
+  "Metadata": {"AWSToolsMetrics":{"AWSAgentToolkit":"aws-cloudformation@3"},"com.aws.cloudformation.Context":{"arch":"One independent VM per tenant; no shared tenant database.","must":["Keep PostgreSQL private","Back up before deleting the stack"],"ref":["../../docs/PLATFORM.md"]}},
+  "Parameters": {
+    "TenantId":{"Type":"String","AllowedPattern":"[a-z0-9]+"},
+    "InstanceType":{"Type":"String","AllowedValues":["t3.small","c7i-flex.large","m7i-flex.large"]},
+    "StorageGb":{"Type":"Number","MinValue":20},
+    "VpcId":{"Type":"AWS::EC2::VPC::Id"},"SubnetId":{"Type":"AWS::EC2::Subnet::Id"},
+    "AllowedCidr":{"Type":"String","AllowedPattern":"[0-9.]+/[0-9]+"},
+    "ArtifactBucket":{"Type":"String"},"ParameterName":{"Type":"String"},
+    "Ami":{"Type":"AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>","Default":"/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id"}
+  },
+  "Resources": {
+    "SecurityGroup":{"Type":"AWS::EC2::SecurityGroup","Metadata":{"com.aws.cloudformation.Context":{"why":"Expose HTTP only to the presentation network","must":["Never expose PostgreSQL or SSH publicly"]}},"Properties":{"GroupDescription":"Tenant presentation access","VpcId":{"Ref":"VpcId"},"SecurityGroupIngress":[{"IpProtocol":"tcp","FromPort":80,"ToPort":80,"CidrIp":{"Ref":"AllowedCidr"}}]}},
+    "Role":{"Type":"AWS::IAM::Role","Metadata":{"com.aws.cloudformation.Context":{"why":"Use instance credentials for artifact, backup and secret access","must":["Restrict backup and secret permissions to this tenant"]}},"Properties":{"AssumeRolePolicyDocument":{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]},"ManagedPolicyArns":["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"],"Policies":[{"PolicyName":"TenantData","PolicyDocument":{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObject"],"Resource":[{"Fn::Sub":"arn:aws:s3:::${ArtifactBucket}/mvp/artifacts/*"},{"Fn::Sub":"arn:aws:s3:::${ArtifactBucket}/mvp/backups/${TenantId}/*"}]},{"Effect":"Allow","Action":["s3:PutObject"],"Resource":{"Fn::Sub":"arn:aws:s3:::${ArtifactBucket}/mvp/backups/${TenantId}/*"}},{"Effect":"Allow","Action":["ssm:GetParameter"],"Resource":{"Fn::Sub":"arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterName}"}},{"Effect":"Deny","Action":["ssm:GetParameter","ssm:GetParameters","ssm:GetParametersByPath"],"NotResource":{"Fn::Sub":"arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterName}"}}]}}]}},
+    "Profile":{"Type":"AWS::IAM::InstanceProfile","Properties":{"Roles":[{"Ref":"Role"}]}},
+    "Server":{"Type":"AWS::EC2::LaunchTemplate","Metadata":{"com.aws.cloudformation.Context":{"why":"Enforce encryption and IMDSv2 consistently","must":["No secrets in user data","Back up data before terminating"]}},"Properties":{"LaunchTemplateData":{"ImageId":{"Ref":"Ami"},"InstanceType":{"Ref":"InstanceType"},"IamInstanceProfile":{"Name":{"Ref":"Profile"}},"MetadataOptions":{"HttpTokens":"required"},"BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":{"Ref":"StorageGb"},"VolumeType":"gp3","Encrypted":true,"DeleteOnTermination":true}}],"NetworkInterfaces":[{"DeviceIndex":0,"AssociatePublicIpAddress":true,"SubnetId":{"Ref":"SubnetId"},"Groups":[{"Ref":"SecurityGroup"}]}],"UserData":""}}},
+    "Machine":{"Type":"AWS::EC2::Instance","Properties":{"LaunchTemplate":{"LaunchTemplateId":{"Ref":"Server"},"Version":"1"},"InstanceType":{"Ref":"InstanceType"},"Tags":[{"Key":"Project","Value":"AttendancePlatformMVP"},{"Key":"Tenant","Value":{"Ref":"TenantId"}}]}}
+  },
+  "Outputs":{"InstanceId":{"Value":{"Ref":"Machine"}},"PublicIp":{"Value":{"Fn::GetAtt":["Machine","PublicIp"]}}}
+}

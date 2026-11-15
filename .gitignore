@@ -20,3 +20,65 @@ crash.*.log
 
 # Dependencias
 node_modules/
+
+# TenantForge MVP: local runtime, documentation tooling and build outputs
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Prisma
+backend/prisma/*.db
+
+# Test coverage
+coverage/
+
+# Misc
+*.tsbuildinfo
+demo/*.xlsx
+test-results/
+playwright-report/
+.runtime/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars.json
+*.tfplan
+
+# Private infrastructure configuration and temporary tooling
+.env.*
+!.env.example
+*.tfvars
+!*.tfvars.example
+*.plan
+*.dump
+*.backup
+*.pem
+*.key
+*.pfx
+*.p12
+__pycache__/
+*.py[cod]
+.venv/

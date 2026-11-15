@@ -1,0 +1,21 @@
+- name: Configure a tenant through Systems Manager
+  hosts: tenants
+  become: true
+  vars:
+    ansible_connection: amazon.aws.aws_ssm
+    ansible_aws_ssm_region: us-east-1
+  tasks:
+    - name: Upload the application artifact
+      ansible.builtin.copy:
+        src: "{{ artifact_path }}"
+        dest: /tmp/tenant-application.tar.gz
+        mode: '0600'
+    - name: Extract application source
+      ansible.builtin.unarchive:
+        src: /tmp/tenant-application.tar.gz
+        dest: /opt/tenantforge
+        remote_src: true
+    - name: Configure services using the tenant instance role
+      ansible.builtin.command: bash /opt/tenantforge/infrastructure/scripts/bootstrap.sh
+      changed_when: true
+      no_log: true

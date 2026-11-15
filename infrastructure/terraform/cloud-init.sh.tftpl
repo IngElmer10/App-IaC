@@ -1,0 +1,24 @@
+#!/bin/bash
+set -eu
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+apt-get install -y curl unzip ca-certificates
+curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscli.zip
+unzip -q /tmp/awscli.zip -d /tmp
+/tmp/aws/install --update
+mkdir -p /opt/tenantforge
+cat > /etc/tenantforge-bootstrap <<'CONFIG'
+AWS_REGION=${region}
+ARTIFACT_BUCKET=${artifact_bucket}
+ARTIFACT_KEY=${artifact_key}
+SSM_PARAMETER=${parameter_name}
+SERVICE_ROLE=${service_role}
+CONFIG
+chmod 600 /etc/tenantforge-bootstrap
+for attempt in $(seq 1 15); do
+  aws s3 cp s3://${artifact_bucket}/${artifact_key} /tmp/app.tar.gz --region ${region} && break
+  sleep 10
+done
+tar -xzf /tmp/app.tar.gz -C /opt/tenantforge
+cp /opt/tenantforge/infrastructure/scripts/bootstrap-role.sh /tmp/tenantforge-bootstrap-run.sh
+bash /tmp/tenantforge-bootstrap-run.sh
