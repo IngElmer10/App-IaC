@@ -1,0 +1,38 @@
+groups:
+  - name: tenant-services
+    rules:
+      - alert: InstanciaNoDisponible
+        expr: up{job="node"} == 0
+        for: 30s
+        labels: {severity: critical}
+        annotations: {summary: 'Una instancia del tenant dejó de responder'}
+      - alert: PostgreSQLDedicadoNoDisponible
+        expr: pg_up == 0 or up{job="postgres"} == 0
+        for: 30s
+        labels: {severity: critical}
+        annotations: {summary: 'El PostgreSQL dedicado no responde'}
+      - alert: BackendNoDisponible
+        expr: up{job="attendance"} == 0
+        for: 30s
+        labels: {severity: critical}
+        annotations: {summary: 'El backend no responde'}
+      - alert: BaseDeDatosNoDisponible
+        expr: attendance_database_up == 0
+        for: 30s
+        labels: {severity: critical}
+        annotations: {summary: 'PostgreSQL no responde'}
+      - alert: ErroresBackend
+        expr: increase(attendance_http_errors_total[5m]) > 5
+        for: 30s
+        labels: {severity: warning}
+        annotations: {summary: 'Aumentaron los errores del backend'}
+      - alert: MemoriaAlta
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.9
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: 'Uso de memoria superior al 90%'}
+      - alert: AlertaDeDemostracion
+        expr: attendance_demo_alert > 0
+        for: 10s
+        labels: {severity: warning}
+        annotations: {summary: 'Alerta de prueba solicitada desde la plataforma'}
